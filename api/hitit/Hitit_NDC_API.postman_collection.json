@@ -1,0 +1,264 @@
+{
+  "info": {
+    "name": "Hitit NDC API - PIA Testing",
+    "description": "Postman collection for testing Hitit NDC API with Pakistan International Airlines",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "PSA27463763",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "Test12345",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://pia-stage.crane.aero",
+      "type": "string"
+    },
+    {
+      "key": "api_base_url",
+      "value": "http://localhost:3000/api/hitit",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Prerequisites",
+      "item": [
+        {
+          "name": "1. DoGeneralParams - Get General Parameters",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/xml"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<CraneNDCService>\n  <Party>\n    <Sender>\n      <TravelAgency>\n        <AgencyID>PSA27463763</AgencyID>\n        <ContactInfo>\n          <EmailAddress>\n            <EmailAddressText>admin@hititcs.com</EmailAddressText>\n          </EmailAddress>\n        </ContactInfo>\n        <Name>HITIT COMPUTER SERVICES</Name>\n      </TravelAgency>\n    </Sender>\n  </Party>\n  <DoGeneralParams>\n  </DoGeneralParams>\n</CraneNDCService>"
+            },
+            "url": {
+              "raw": "{{base_url}}/DoGeneralParams",
+              "host": ["{{base_url}}"],
+              "path": ["DoGeneralParams"]
+            }
+          }
+        },
+        {
+          "name": "2. DoAirlineProfile - Get Airline Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/xml"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<CraneNDCService>\n  <Party>\n    <Sender>\n      <TravelAgency>\n        <AgencyID>PSA27463763</AgencyID>\n        <ContactInfo>\n          <EmailAddress>\n            <EmailAddressText>admin@hititcs.com</EmailAddressText>\n          </EmailAddress>\n        </ContactInfo>\n        <Name>HITIT COMPUTER SERVICES</Name>\n      </TravelAgency>\n    </Sender>\n  </Party>\n  <DoAirlineProfile>\n    <AirlineDesigCode>PK</AirlineDesigCode>\n  </DoAirlineProfile>\n</CraneNDCService>"
+            },
+            "url": {
+              "raw": "{{base_url}}/DoAirlineProfile",
+              "host": ["{{base_url}}"],
+              "path": ["DoAirlineProfile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "DoAirShopping",
+      "item": [
+        {
+          "name": "3. DoAirShopping - One Way (ISB-KHI)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/xml"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<CraneNDCService>\n  <Party>\n    <Sender>\n      <TravelAgency>\n        <AgencyID>PSA27463763</AgencyID>\n        <ContactInfo>\n          <EmailAddress>\n            <EmailAddressText>admin@hititcs.com</EmailAddressText>\n          </EmailAddress>\n        </ContactInfo>\n        <Name>HITIT COMPUTER SERVICES</Name>\n      </TravelAgency>\n    </Sender>\n  </Party>\n  <DoAirShopping>\n    <CoreRequest>\n      <AirlineDesigCode>PK</AirlineDesigCode>\n      <CurCode>PKR</CurCode>\n      <CabinTypeCode>Y</CabinTypeCode>\n      <TripType>OneWay</TripType>\n    </CoreRequest>\n    <OriginDestCriteriaList>\n      <OriginDestCriteria>\n        <OriginCode>ISB</OriginCode>\n        <DestCode>KHI</DestCode>\n        <DepartureDate>2024-12-20</DepartureDate>\n      </OriginDestCriteria>\n    </OriginDestCriteriaList>\n    <PaxList>\n      <Pax>\n        <PaxID>PAX-ADT1</PaxID>\n        <PTC>ADT</PTC>\n        <Birthdate>1990-01-01</Birthdate>\n      </Pax>\n    </PaxList>\n  </DoAirShopping>\n</CraneNDCService>"
+            },
+            "url": {
+              "raw": "{{base_url}}/DoAirShopping",
+              "host": ["{{base_url}}"],
+              "path": ["DoAirShopping"]
+            }
+          }
+        },
+        {
+          "name": "4. DoAirShopping - Round Trip (KHI-ISB-KHI)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/xml"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<CraneNDCService>\n  <Party>\n    <Sender>\n      <TravelAgency>\n        <AgencyID>PSA27463763</AgencyID>\n        <ContactInfo>\n          <EmailAddress>\n            <EmailAddressText>admin@hititcs.com</EmailAddressText>\n          </EmailAddress>\n        </ContactInfo>\n        <Name>HITIT COMPUTER SERVICES</Name>\n      </TravelAgency>\n    </Sender>\n  </Party>\n  <DoAirShopping>\n    <CoreRequest>\n      <AirlineDesigCode>PK</AirlineDesigCode>\n      <CurCode>PKR</CurCode>\n      <CabinTypeCode>Y</CabinTypeCode>\n      <TripType>RoundTrip</TripType>\n    </CoreRequest>\n    <OriginDestCriteriaList>\n      <OriginDestCriteria>\n        <OriginCode>KHI</OriginCode>\n        <DestCode>ISB</DestCode>\n        <DepartureDate>2024-12-20</DepartureDate>\n      </OriginDestCriteria>\n      <OriginDestCriteria>\n        <OriginCode>ISB</OriginCode>\n        <DestCode>KHI</DestCode>\n        <DepartureDate>2024-12-25</DepartureDate>\n      </OriginDestCriteria>\n    </OriginDestCriteriaList>\n    <PaxList>\n      <Pax>\n        <PaxID>PAX-ADT1</PaxID>\n        <PTC>ADT</PTC>\n        <Birthdate>1990-01-01</Birthdate>\n      </Pax>\n    </PaxList>\n  </DoAirShopping>\n</CraneNDCService>"
+            },
+            "url": {
+              "raw": "{{base_url}}/DoAirShopping",
+              "host": ["{{base_url}}"],
+              "path": ["DoAirShopping"]
+            }
+          }
+        },
+        {
+          "name": "5. DoAirShopping - Multi Destination (KHI-ISB LHE-KHI)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/xml"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<CraneNDCService>\n  <Party>\n    <Sender>\n      <TravelAgency>\n        <AgencyID>PSA27463763</AgencyID>\n        <ContactInfo>\n          <EmailAddress>\n            <EmailAddressText>admin@hititcs.com</EmailAddressText>\n          </EmailAddress>\n        </ContactInfo>\n        <Name>HITIT COMPUTER SERVICES</Name>\n      </TravelAgency>\n    </Sender>\n  </Party>\n  <DoAirShopping>\n    <CoreRequest>\n      <AirlineDesigCode>PK</AirlineDesigCode>\n      <CurCode>PKR</CurCode>\n      <CabinTypeCode>Y</CabinTypeCode>\n      <TripType>MultiDestination</TripType>\n    </CoreRequest>\n    <OriginDestCriteriaList>\n      <OriginDestCriteria>\n        <OriginCode>KHI</OriginCode>\n        <DestCode>ISB</DestCode>\n        <DepartureDate>2024-12-20</DepartureDate>\n      </OriginDestCriteria>\n      <OriginDestCriteria>\n        <OriginCode>LHE</OriginCode>\n        <DestCode>KHI</DestCode>\n        <DepartureDate>2024-12-25</DepartureDate>\n      </OriginDestCriteria>\n    </OriginDestCriteriaList>\n    <PaxList>\n      <Pax>\n        <PaxID>PAX-ADT1</PaxID>\n        <PTC>ADT</PTC>\n        <Birthdate>1990-01-01</Birthdate>\n      </Pax>\n    </PaxList>\n  </DoAirShopping>\n</CraneNDCService>"
+            },
+            "url": {
+              "raw": "{{base_url}}/DoAirShopping",
+              "host": ["{{base_url}}"],
+              "path": ["DoAirShopping"]
+            }
+          }
+        },
+        {
+          "name": "6. DoAirShopping - Multiple Passengers (2ADT+1CHD+1INF)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/xml"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<CraneNDCService>\n  <Party>\n    <Sender>\n      <TravelAgency>\n        <AgencyID>PSA27463763</AgencyID>\n        <ContactInfo>\n          <EmailAddress>\n            <EmailAddressText>admin@hititcs.com</EmailAddressText>\n          </EmailAddress>\n        </ContactInfo>\n        <Name>HITIT COMPUTER SERVICES</Name>\n      </TravelAgency>\n    </Sender>\n  </Party>\n  <DoAirShopping>\n    <CoreRequest>\n      <AirlineDesigCode>PK</AirlineDesigCode>\n      <CurCode>PKR</CurCode>\n      <CabinTypeCode>Y</CabinTypeCode>\n      <TripType>OneWay</TripType>\n    </CoreRequest>\n    <OriginDestCriteriaList>\n      <OriginDestCriteria>\n        <OriginCode>ISB</OriginCode>\n        <DestCode>KHI</DestCode>\n        <DepartureDate>2024-12-20</DepartureDate>\n      </OriginDestCriteria>\n    </OriginDestCriteriaList>\n    <PaxList>\n      <Pax>\n        <PaxID>PAX-ADT1</PaxID>\n        <PTC>ADT</PTC>\n        <Birthdate>1990-01-01</Birthdate>\n      </Pax>\n      <Pax>\n        <PaxID>PAX-ADT2</PaxID>\n        <PTC>ADT</PTC>\n        <Birthdate>1985-05-15</Birthdate>\n      </Pax>\n      <Pax>\n        <PaxID>PAX-CHD1</PaxID>\n        <PTC>CHD</PTC>\n        <Birthdate>2015-09-20</Birthdate>\n      </Pax>\n      <Pax>\n        <PaxID>PAX-INF1</PaxID>\n        <PTC>INF</PTC>\n        <Birthdate>2023-01-01</Birthdate>\n      </Pax>\n    </PaxList>\n  </DoAirShopping>\n</CraneNDCService>"
+            },
+            "url": {
+              "raw": "{{base_url}}/DoAirShopping",
+              "host": ["{{base_url}}"],
+              "path": ["DoAirShopping"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "API Endpoints (via Backend)",
+      "item": [
+        {
+          "name": "1. Get General Parameters",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api_base_url}}/general-params",
+              "host": ["{{api_base_url}}"],
+              "path": ["general-params"]
+            }
+          }
+        },
+        {
+          "name": "2. Get Airline Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api_base_url}}/airline-profile?airlineCode=PK",
+              "host": ["{{api_base_url}}"],
+              "path": ["airline-profile"],
+              "query": [
+                {
+                  "key": "airlineCode",
+                  "value": "PK"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. Search Flights - One Way",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"originDestCriteria\": [\n    {\n      \"originCode\": \"ISB\",\n      \"destCode\": \"KHI\",\n      \"departureDate\": \"2024-12-20\"\n    }\n  ],\n  \"paxList\": [\n    {\n      \"paxID\": \"PAX-ADT1\",\n      \"ptc\": \"ADT\",\n      \"birthdate\": \"1990-01-01\"\n    }\n  ],\n  \"currency\": \"PKR\",\n  \"cabinClass\": \"Y\",\n  \"tripType\": \"OneWay\",\n  \"airlineCode\": \"PK\",\n  \"useCitySearch\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{api_base_url}}/search-flights",
+              "host": ["{{api_base_url}}"],
+              "path": ["search-flights"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+

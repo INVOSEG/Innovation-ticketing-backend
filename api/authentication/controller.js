@@ -107,7 +107,8 @@ exports.login = async (req, res) => {
     // Simulate OTP send (replace with actual API call)
     console.log(
       user.email,
-      `OTP for ${agency?.agencyName || "your account"
+      `OTP for ${
+        agency?.agencyName || "your account"
       } is ${otp}. Do not disclose OTP to anyone.`
     );
     await sendEmail(
@@ -117,7 +118,7 @@ exports.login = async (req, res) => {
     );
     // await sendWhatsAppMessage(
     //   user.phone,
-    //   ` One Time Password to complete your first time login for ${agency.agencyName} is ${otp}. INNOVATION TECH Travels never calls to verify OTP. \n *Do not disclose OTP to anyone*.`
+    //   ` One Time Password to complete your first time login for ${agency.agencyName} is ${otp}. Al-Saboor Travels never calls to verify OTP. \n *Do not disclose OTP to anyone*.`
     // );
     return successResponse(res, "OTP has been sent to your email.");
   } catch (error) {
@@ -271,7 +272,8 @@ exports.resendOTP = async (req, res) => {
 
     // Simulate OTP send (replace with actual API call)
     console.log(
-      `OTP for ${agency?.agencyName || "your account"
+      `OTP for ${
+        agency?.agencyName || "your account"
       } is ${otp}. Do not disclose OTP to anyone.`
     );
 
@@ -282,7 +284,7 @@ exports.resendOTP = async (req, res) => {
     );
     await sendWhatsAppMessage(
       user.phone,
-      ` One Time Password to complete your first time login for ${agency?.agencyName} is ${otp}. INNOVATION TECH Travels never calls to verify OTP. \n *Do not disclose OTP to anyone*.`
+      ` One Time Password to complete your first time login for ${agency?.agencyName} is ${otp}. Al-Saboor Travels never calls to verify OTP. \n *Do not disclose OTP to anyone*.`
     );
 
     res.json({

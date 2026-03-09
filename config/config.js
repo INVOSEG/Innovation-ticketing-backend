@@ -31,6 +31,14 @@ module.exports = {
     BASE_URL: `${SABRE_URL}`,
     SABRE_PCC: `${SABRE_PCC}`,
     SABRE_IMPORTPNR: process.env.IMPORTSABRE,
-    SOAP_URL: "https://webservices.cert.platform.sabre.com",
+    SOAP_URL: process.env.SABRE_SOAP_URL || "https://webservices.havail.sabre.com",
+  },
+  HITIT: {
+    USERNAME: process.env.HITIT_USERNAME,
+    PASSWORD: process.env.HITIT_PASSWORD,
+    BASE_URL: process.env.HITIT_BASE_URL,
+    AGENCY_ID: process.env.HITIT_AGENCY_ID,
+    EMAIL: process.env.HITIT_EMAIL,
+    AGENCY_NAME: process.env.HITIT_AGENCY_NAME,
   },
 };

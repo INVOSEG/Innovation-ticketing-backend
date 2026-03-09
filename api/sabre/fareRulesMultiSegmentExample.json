@@ -1,0 +1,164 @@
+{
+  "adult": 2,
+  "child": 1,
+  "infant": 1,
+  "flightDetails": [
+    {
+      "FlightNumber": "867",
+      "DepartureAirport": "MCT",
+      "ArrivalAirport": "DXB",
+      "MarketingAirline": "EK",
+      "DepartureDate": "2026-02-12T05:05:00",
+      "ArrivalDate": "2026-02-12T06:15:00",
+      "BookingDate": "2026-02-12",
+      "ResBookDesigCode": "Y",
+      "SegmentNumber": "1",
+      "SegmentType": "A",
+      "RealReservationStatus": "NN",
+      "ValidatingCarrier": "EK",
+      "farebase": [
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "ADT"
+        },
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "CNN"
+        },
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "INF"
+        }
+      ]
+    },
+    {
+      "FlightNumber": "123",
+      "DepartureAirport": "DXB",
+      "ArrivalAirport": "LHR",
+      "MarketingAirline": "EK",
+      "DepartureDate": "2026-02-12T08:00:00",
+      "ArrivalDate": "2026-02-12T12:30:00",
+      "BookingDate": "2026-02-12",
+      "ResBookDesigCode": "Y",
+      "SegmentNumber": "2",
+      "SegmentType": "A",
+      "RealReservationStatus": "NN",
+      "ValidatingCarrier": "EK",
+      "farebase": [
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "ADT"
+        },
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "CNN"
+        },
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "INF"
+        }
+      ]
+    },
+    {
+      "FlightNumber": "456",
+      "DepartureAirport": "LHR",
+      "ArrivalAirport": "JFK",
+      "MarketingAirline": "EK",
+      "DepartureDate": "2026-02-12T14:00:00",
+      "ArrivalDate": "2026-02-12T17:30:00",
+      "BookingDate": "2026-02-12",
+      "ResBookDesigCode": "Y",
+      "SegmentNumber": "3",
+      "SegmentType": "A",
+      "RealReservationStatus": "NN",
+      "ValidatingCarrier": "EK",
+      "farebase": [
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "ADT"
+        },
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "CNN"
+        },
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "INF"
+        }
+      ]
+    },
+    {
+      "FlightNumber": "789",
+      "DepartureAirport": "JFK",
+      "ArrivalAirport": "DXB",
+      "MarketingAirline": "EK",
+      "DepartureDate": "2026-02-20T22:00:00",
+      "ArrivalDate": "2026-02-21T19:30:00",
+      "BookingDate": "2026-02-20",
+      "ResBookDesigCode": "Y",
+      "SegmentNumber": "4",
+      "SegmentType": "A",
+      "RealReservationStatus": "NN",
+      "ValidatingCarrier": "EK",
+      "farebase": [
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "ADT"
+        },
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "CNN"
+        },
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "INF"
+        }
+      ]
+    },
+    {
+      "FlightNumber": "321",
+      "DepartureAirport": "DXB",
+      "ArrivalAirport": "MCT",
+      "MarketingAirline": "EK",
+      "DepartureDate": "2026-02-21T22:00:00",
+      "ArrivalDate": "2026-02-21T23:15:00",
+      "BookingDate": "2026-02-21",
+      "ResBookDesigCode": "Y",
+      "SegmentNumber": "5",
+      "SegmentType": "A",
+      "RealReservationStatus": "NN",
+      "ValidatingCarrier": "EK",
+      "farebase": [
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "ADT"
+        },
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "CNN"
+        },
+        {
+          "FareBasisCode": "LEEOPOM1",
+          "FareComponentNumber": "1",
+          "PassengerType": "INF"
+        }
+      ]
+    }
+  ],
+  "validatingCarrier": "EK",
+  "options": {}
+}

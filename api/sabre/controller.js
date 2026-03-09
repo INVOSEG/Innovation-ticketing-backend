@@ -77,7 +77,10 @@ async function getBookingWithLogos(req, res) {
           aircraft: segment.aircraft?.code || segment.boeing || "",
           class: segment.className || segment.classCode || "",
           stops: segment.numberOfStops || 0,
-          meals: segment.meals || "N/A",
+          meals:
+            segment.meals === "true" || airlineCode === "EY"
+              ? "true"
+              : segment.meals || "false",
           distance: segment.AirMilesFlown || 0,
         };
 
@@ -120,7 +123,10 @@ async function getBookingWithLogos(req, res) {
           aircraft: segment.aircraft?.code || segment.boeing || "",
           class: segment.className || segment.classCode || "",
           stops: segment.numberOfStops || 0,
-          meals: segment.meals || "N/A",
+          meals:
+            segment.meals === "true" || airlineCode === "EY"
+              ? "true"
+              : segment.meals || "false",
           distance: segment.AirMilesFlown || 0,
         });
       }
@@ -168,7 +174,7 @@ async function getBookingWithLogos(req, res) {
                 fromAirport,
                 toAirport,
               };
-            })
+            }),
           );
           booking.flightOffers[0].itineraries = itineraries;
         }
@@ -220,7 +226,7 @@ async function getBookingWithLogos(req, res) {
             const segmentDetails = findSegmentDetails(
               flightNumber,
               depAirport,
-              arrAirport
+              arrAirport,
             );
 
             if (segmentDetails) {
@@ -246,7 +252,7 @@ async function getBookingWithLogos(req, res) {
             }
 
             return dep;
-          })
+          }),
         );
       }
 
@@ -283,7 +289,7 @@ async function getBookingWithLogos(req, res) {
             const segmentDetails = findSegmentDetails(
               flightNumber,
               depAirport,
-              arrAirport
+              arrAirport,
             );
 
             if (segmentDetails) {
@@ -307,7 +313,7 @@ async function getBookingWithLogos(req, res) {
               };
             }
             return ret;
-          })
+          }),
         );
       }
     }
@@ -329,7 +335,7 @@ async function getBookingWithLogos(req, res) {
     };
 
     console.log(
-      `✅ Booking data ready for frontend PDF generation (PNR: ${pnr})`
+      `✅ Booking data ready for frontend PDF generation (PNR: ${pnr})`,
     );
 
     return successResponse(res, responseData, 200);
@@ -433,7 +439,7 @@ async function getCode(firstName, lastName) {
 
   // Extract NUMERIC suffix from each code
   const numbers = travellers.map((t) =>
-    parseInt(t.code.replace(prefix, ""), 10)
+    parseInt(t.code.replace(prefix, ""), 10),
   );
 
   const maxNumber = Math.max(...numbers);
@@ -453,7 +459,7 @@ function formatDate(dateString) {
     // Check if dateString is valid
     if (!dateString || typeof dateString !== "string") {
       throw new Error(
-        "Invalid input. Please provide a valid date string in YYYY-MM-DD format."
+        "Invalid input. Please provide a valid date string in YYYY-MM-DD format.",
       );
     }
 
@@ -570,7 +576,7 @@ function getbrandFeatures(baggageInformation, baggageAllowanceDescs) {
 function convertToISODateTimeWithRollOver(
   timeStr,
   baseDateStr,
-  previousDateTime = null
+  previousDateTime = null,
 ) {
   const [hours, minutes, seconds] = timeStr.split(":").map(Number);
   const baseDate = new Date(baseDateStr);
@@ -598,7 +604,7 @@ function stripTimezoneFromTime(timeStr) {
 function convertToISODateTimeWithRollOverf(
   timeStr,
   baseDateStr,
-  previousDateTime = null
+  previousDateTime = null,
 ) {
   try {
     // Strip timezone if present, but don't convert the time itself
@@ -703,7 +709,7 @@ function calculateAdjustedPrice(
   markups,
   staffMarkupValue,
   staffMarkupType,
-  carrierCode
+  carrierCode,
 ) {
   let adjustedPrice = price;
 
@@ -846,7 +852,7 @@ async function postSabreFlightData(req, res) {
           DiversityParameters: {
             AdditionalNonStopsNumber: 10,
           },
-          DataSources: { ATPCO: "Enable", LCC: "Enable", NDC: "Disable" },
+          DataSources: { ATPCO: "Enable", LCC: "Enable", NDC: "Enable" },
           NumTrips: { Number: 50 },
           KeepSameCabin: { Enabled: true },
           OnlineIndicator: { Ind: true },
@@ -907,7 +913,7 @@ async function postSabreFlightData(req, res) {
       {
         Code: "CNN",
         Quantity: Number(children),
-      }
+      },
     );
   }
   if (Number(infants) > 0) {
@@ -915,7 +921,7 @@ async function postSabreFlightData(req, res) {
       {
         Code: "INF",
         Quantity: Number(infants),
-      }
+      },
     );
   }
   if (end_date) {
@@ -1011,7 +1017,7 @@ async function postSabreFlightData(req, res) {
   try {
     const flightData = await postFlightData(
       `${SABRE.BASE_URL}/v4/offers/shop`,
-      data
+      data,
     );
     if (flightData.groupedItineraryResponse.statistics.itineraryCount <= 0) {
       return errorResponse(res, "No ticket found", 200);
@@ -1037,7 +1043,7 @@ async function postSabreFlightData(req, res) {
       const uniqueId = v4();
       // const totalTimeforFlight=formatElapsedTime()
       const departureLeg = legsDesc.find(
-        (leg) => leg.id === itinerary.legs[0].ref
+        (leg) => leg.id === itinerary.legs[0].ref,
       );
       const returnLeg =
         itinerary.legs.length > 1
@@ -1062,7 +1068,7 @@ async function postSabreFlightData(req, res) {
                           seatsAvailable: segmentData.segment.seatsAvailable,
                           meal: segmentData.segment?.mealCode,
                         };
-                      }
+                      },
                     );
 
                     return {
@@ -1071,20 +1077,20 @@ async function postSabreFlightData(req, res) {
                       endAirport: fareComponent.endAirport,
                       segments,
                     };
-                  }
+                  },
                 );
                 const brandInfo = passengerDetails.fareComponents.map(
                   (component) => {
                     // Find the matching fareComponentDesc using the "ref"
                     const matchedDesc = fareComponentDescs.find(
-                      (desc) => desc.id === component.ref
+                      (desc) => desc.id === component.ref,
                     );
 
                     console.log("🔍 fareComponent.ref:", component.ref);
                     console.log("🔍 matched fareComponentDesc:", matchedDesc);
 
                     return matchedDesc ? matchedDesc.fareBasisCode : null;
-                  }
+                  },
                 );
 
                 // Fetch the marketing flight details
@@ -1097,18 +1103,18 @@ async function postSabreFlightData(req, res) {
                       programDescription: schedule.programDescription,
                       programSystemCode: schedule.programSystemCode,
                     }));
-                  }
+                  },
                 );
 
                 // Additional required details
-                (a =
+                ((a =
                   passengerDetails.fareComponents[0].segments[0].segment
                     .seatsAvailable), // Total available seats
                   (b = getBaggageInfo(
                     passengerDetails.baggageInformation,
-                    baggageAllowanceDesc
+                    baggageAllowanceDesc,
                   )), // Total available seats
-                  (adultb1 = passengerDetails.baggageInformation);
+                  (adultb1 = passengerDetails.baggageInformation));
                 adultb2 = baggageAllowanceDesc;
                 c =
                   passengerDetails.fareComponents[0].segments[0].segment
@@ -1116,11 +1122,11 @@ async function postSabreFlightData(req, res) {
                 d = passengerDetails.nonRefundable; // Total available seats
                 e = getbrandNameInfo(
                   passengerDetails.fareComponents,
-                  fareComponentDescs
+                  fareComponentDescs,
                 );
                 let z = getbrandNameInfo(
                   passengerDetails.fareComponents,
-                  fareComponentDescs
+                  fareComponentDescs,
                 );
                 return {
                   brandInfo,
@@ -1133,11 +1139,11 @@ async function postSabreFlightData(req, res) {
                   brandCode: z[0].brandCode,
                   baggageInformation: getBaggageInfo(
                     passengerDetails.baggageInformation,
-                    baggageAllowanceDesc
+                    baggageAllowanceDesc,
                   ),
                   brandFeatures: getbrandFeatures(
                     passengerDetails.fareComponents,
-                    brandFeatureDescs
+                    brandFeatureDescs,
                   ),
                   fare: passengerDetails.passengerTotalFare.totalFare, // Total fare
                   taxAmount: passengerDetails.passengerTotalFare.totalTaxAmount, // Total fare
@@ -1157,7 +1163,7 @@ async function postSabreFlightData(req, res) {
                 findMakrup,
                 staffMarkupValue,
                 staffMarkupType,
-                airlineCode
+                airlineCode,
               ),
 
               refundable: d,
@@ -1173,7 +1179,7 @@ async function postSabreFlightData(req, res) {
                 findMakrup,
                 staffMarkupValue,
                 staffMarkupType,
-                airlineCode
+                airlineCode,
               ),
               netFare: data.fare.totalFare.totalPrice,
             };
@@ -1184,13 +1190,13 @@ async function postSabreFlightData(req, res) {
 
       const pricingInfo = itinerary?.pricingInformation?.[0]?.fare;
       const adults = pricingInfo?.passengerInfoList.find(
-        (p) => p.passengerInfo.passengerType === "ADT"
+        (p) => p.passengerInfo.passengerType === "ADT",
       );
       const children = pricingInfo?.passengerInfoList.find(
-        (p) => p.passengerInfo.passengerType === "CNN"
+        (p) => p.passengerInfo.passengerType === "CNN",
       );
       const infants = pricingInfo?.passengerInfoList.find(
-        (p) => p.passengerInfo.passengerType === "INF"
+        (p) => p.passengerInfo.passengerType === "INF",
       );
 
       let adultTotalSeatsAvailable = 0;
@@ -1200,7 +1206,7 @@ async function postSabreFlightData(req, res) {
       let adultBookingCode = [];
       let adultBaggage = getBaggageInfo(
         adults.passengerInfo.baggageInformation,
-        baggageAllowanceDesc
+        baggageAllowanceDesc,
       );
 
       // Check if passenger information has refundable status
@@ -1230,7 +1236,7 @@ async function postSabreFlightData(req, res) {
       if (children) {
         childBaggage = getBaggageInfo(
           children.passengerInfo.baggageInformation,
-          baggageAllowanceDesc
+          baggageAllowanceDesc,
         );
         // Check if passenger information has refundable status
         childIsRefundable = !adults?.passengerInfo.nonRefundable;
@@ -1247,7 +1253,7 @@ async function postSabreFlightData(req, res) {
             }
             if (segment.cabinCode)
               childCabin.push(
-                cabinTypeMap[segment.cabinCode] || segment.cabinCode
+                cabinTypeMap[segment.cabinCode] || segment.cabinCode,
               ); // Map cabin code to full name
           });
         });
@@ -1260,7 +1266,7 @@ async function postSabreFlightData(req, res) {
       if (infants) {
         infantBaggage = getBaggageInfo(
           infants.passengerInfo.baggageInformation,
-          baggageAllowanceDesc
+          baggageAllowanceDesc,
         );
         // Check if passenger information has refundable status
         infantIsRefundable = !adults?.passengerInfo.nonRefundable;
@@ -1277,7 +1283,7 @@ async function postSabreFlightData(req, res) {
             }
             if (segment.cabinCode)
               infantCabin.push(
-                cabinTypeMap[segment.cabinCode] || segment.cabinCode
+                cabinTypeMap[segment.cabinCode] || segment.cabinCode,
               ); // Map cabin code to full name
           });
         });
@@ -1322,7 +1328,7 @@ async function postSabreFlightData(req, res) {
         const departureTimeStr = convertToISODateTimeWithRollOverf(
           detail.departure.time,
           start_date,
-          lastArrivalTime
+          lastArrivalTime,
         );
         const departureTime = new Date(departureTimeStr);
 
@@ -1331,7 +1337,7 @@ async function postSabreFlightData(req, res) {
         const arrivalTimeStr = convertToISODateTimeWithRollOverf(
           detail.arrival.time,
           start_date,
-          departureTime
+          departureTime,
         );
         const arrivalTime = new Date(arrivalTimeStr);
 
@@ -1368,7 +1374,7 @@ async function postSabreFlightData(req, res) {
           const departureTimeStr = convertToISODateTimeWithRollOverf(
             detail.departure.time,
             end_date,
-            lastReturnArrival
+            lastReturnArrival,
           );
           const departureTime = new Date(departureTimeStr);
 
@@ -1377,7 +1383,7 @@ async function postSabreFlightData(req, res) {
           const arrivalTimeStr = convertToISODateTimeWithRollOverf(
             detail.arrival.time,
             end_date,
-            departureTime
+            departureTime,
           );
           const arrivalTime = new Date(arrivalTimeStr);
 
@@ -1385,7 +1391,7 @@ async function postSabreFlightData(req, res) {
           if (index > 0 && lastReturnArrival) {
             layoverTime = calculateLayoverTime(
               lastReturnArrival,
-              departureTime
+              departureTime,
             );
           }
 
@@ -1413,7 +1419,7 @@ async function postSabreFlightData(req, res) {
         findMakrup,
         staffMarkupValue,
         staffMarkupType,
-        carrierCode
+        carrierCode,
       );
       netFare = pricingInfo.totalFare.totalPrice;
       const ticketTaxes = pricingInfo.passengerInfoList
@@ -1583,7 +1589,7 @@ async function postSabreFlightDataM(req, res) {
         LocationCode: flight.DestinationLocation.LocationCode,
       },
       // Fixed: true, // destination fixed
-    })
+    }),
   );
 
   console.log(airLinePreference);
@@ -1626,7 +1632,7 @@ async function postSabreFlightDataM(req, res) {
           DiversityParameters: {
             AdditionalNonStopsNumber: 10,
           },
-          DataSources: { ATPCO: "Enable", LCC: "Enable", NDC: "Disable" },
+          DataSources: { ATPCO: "Enable", LCC: "Enable", NDC: "Enable" },
           // NumTrips: { Number: 50 },
           KeepSameCabin: { Enabled: true },
           OnlineIndicator: { Ind: true },
@@ -1682,7 +1688,7 @@ async function postSabreFlightDataM(req, res) {
       {
         Code: "CNN",
         Quantity: Number(childrenCount),
-      }
+      },
     );
   }
   if (Number(infantsCount) > 0) {
@@ -1690,7 +1696,7 @@ async function postSabreFlightDataM(req, res) {
       {
         Code: "INF",
         Quantity: Number(infantsCount),
-      }
+      },
     );
   }
   if (travelClass) {
@@ -1707,7 +1713,7 @@ async function postSabreFlightDataM(req, res) {
   try {
     const flightData = await postFlightData(
       `${SABRE.BASE_URL}/v5/offers/shop`,
-      data
+      data,
     );
     // return errorResponse(res, flightData, 404);
 
@@ -1733,7 +1739,7 @@ async function postSabreFlightDataM(req, res) {
 
       // First, find the first available (not sold out) pricing
       const availablePricing = itinerary?.pricingInformation?.find(
-        (p) => !p.soldOut
+        (p) => !p.soldOut,
       );
 
       if (!availablePricing) {
@@ -1745,13 +1751,13 @@ async function postSabreFlightDataM(req, res) {
       const pricingInfo = availablePricing.fare;
 
       const adults = pricingInfo?.passengerInfoList.find(
-        (p) => p.passengerInfo.passengerType === "ADT"
+        (p) => p.passengerInfo.passengerType === "ADT",
       );
       const children = pricingInfo?.passengerInfoList.find(
-        (p) => p.passengerInfo.passengerType === "CNN"
+        (p) => p.passengerInfo.passengerType === "CNN",
       );
       const infants = pricingInfo?.passengerInfoList.find(
-        (p) => p.passengerInfo.passengerType === "INF"
+        (p) => p.passengerInfo.passengerType === "INF",
       );
       const brandedFare = itinerary?.pricingInformation
         ?.map((data) => {
@@ -1769,7 +1775,7 @@ async function postSabreFlightDataM(req, res) {
                           bookingCode: segmentData.segment?.bookingCode,
                           seatsAvailable: segmentData?.segment?.seatsAvailable,
                         };
-                      }
+                      },
                     );
 
                     return {
@@ -1778,20 +1784,20 @@ async function postSabreFlightDataM(req, res) {
                       endAirport: fareComponent?.endAirport,
                       segments,
                     };
-                  }
+                  },
                 );
                 const brandInfo = passengerDetails.fareComponents.map(
                   (component) => {
                     // Find the matching fareComponentDesc using the "ref"
                     const matchedDesc = fareComponentDescs.find(
-                      (desc) => desc.id === component.ref
+                      (desc) => desc.id === component.ref,
                     );
 
                     console.log("🔍 fareComponent.ref:", component.ref);
                     console.log("🔍 matched fareComponentDesc:", matchedDesc);
 
                     return matchedDesc ? matchedDesc.fareBasisCode : null;
-                  }
+                  },
                 );
 
                 // Fetch the marketing flight details
@@ -1804,18 +1810,18 @@ async function postSabreFlightDataM(req, res) {
                       programDescription: schedule.programDescription,
                       programSystemCode: schedule.programSystemCode,
                     }));
-                  }
+                  },
                 );
 
                 // Additional required details
-                (a =
+                ((a =
                   passengerDetails.fareComponents[0].segments[0].segment
                     .seatsAvailable), // Total available seats
                   (b = getBaggageInfo(
                     passengerDetails.baggageInformation,
-                    baggageAllowanceDesc
+                    baggageAllowanceDesc,
                   )), // Total available seats
-                  (adultb1 = passengerDetails.baggageInformation);
+                  (adultb1 = passengerDetails.baggageInformation));
                 adultb2 = baggageAllowanceDesc;
                 c =
                   passengerDetails.fareComponents[0].segments[0].segment
@@ -1823,11 +1829,11 @@ async function postSabreFlightDataM(req, res) {
                 d = passengerDetails.nonRefundable; // Total available seats
                 e = getbrandNameInfo(
                   passengerDetails.fareComponents,
-                  fareComponentDescs
+                  fareComponentDescs,
                 );
                 let z = getbrandNameInfo(
                   passengerDetails.fareComponents,
-                  fareComponentDescs
+                  fareComponentDescs,
                 );
                 return {
                   brandInfo,
@@ -1841,11 +1847,11 @@ async function postSabreFlightDataM(req, res) {
                   fareBasisCode: z[0].fareBasisCode,
                   baggageInformation: getBaggageInfo(
                     passengerDetails.baggageInformation,
-                    baggageAllowanceDesc
+                    baggageAllowanceDesc,
                   ),
                   brandFeatures: getbrandFeatures(
                     passengerDetails.fareComponents,
-                    brandFeatureDescs
+                    brandFeatureDescs,
                   ),
                   fare: passengerDetails.passengerTotalFare.totalFare, // Total fare
                   taxAmount: passengerDetails.passengerTotalFare.totalTaxAmount, // Total fare
@@ -1865,7 +1871,7 @@ async function postSabreFlightDataM(req, res) {
                 findMarkup,
                 staffMarkupValue,
                 staffMarkupType,
-                airlineCode
+                airlineCode,
               ),
 
               refundable: d,
@@ -1880,7 +1886,7 @@ async function postSabreFlightDataM(req, res) {
                 findMarkup,
                 staffMarkupValue,
                 staffMarkupType,
-                airlineCode
+                airlineCode,
               ),
               netFare: data.fare.totalFare.totalPrice,
             };
@@ -1899,7 +1905,7 @@ async function postSabreFlightDataM(req, res) {
       let adultBaggage = adults?.passengerInfo
         ? getBaggageInfo(
           adults?.passengerInfo?.baggageInformation,
-          baggageAllowanceDesc
+          baggageAllowanceDesc,
         )
         : null;
 
@@ -1920,7 +1926,7 @@ async function postSabreFlightDataM(req, res) {
 
           if (segment?.cabinCode)
             adultCabin.push(
-              cabinTypeMap[segment.cabinCode] || segment.cabinCode
+              cabinTypeMap[segment.cabinCode] || segment.cabinCode,
             );
         });
       });
@@ -1934,7 +1940,7 @@ async function postSabreFlightDataM(req, res) {
       if (children) {
         childBaggage = getBaggageInfo(
           children.passengerInfo.baggageInformation,
-          baggageAllowanceDesc
+          baggageAllowanceDesc,
         );
         // Check if passenger information has refundable status
         childIsRefundable = !adults?.passengerInfo.nonRefundable;
@@ -1961,7 +1967,7 @@ async function postSabreFlightDataM(req, res) {
       if (infants) {
         infantBaggage = getBaggageInfo(
           infants.passengerInfo.baggageInformation,
-          baggageAllowanceDesc
+          baggageAllowanceDesc,
         );
         // Check if passenger information has refundable status
         infantIsRefundable = !adults?.passengerInfo.nonRefundable;
@@ -1990,7 +1996,7 @@ async function postSabreFlightDataM(req, res) {
         // Process all schedules for each leg
         return legdesc.schedules.map((scheduleItem, scheduleIndex) => {
           const departureScheduleInfo = scheduleDescs.find(
-            (schedule) => schedule.id === scheduleItem.ref
+            (schedule) => schedule.id === scheduleItem.ref,
           );
           const marketingCarrier = departureScheduleInfo?.carrier?.marketing;
           const operatingCarrier = departureScheduleInfo?.carrier?.operating;
@@ -2017,7 +2023,7 @@ async function postSabreFlightDataM(req, res) {
           const departureTimeStr = convertToISODateTimeWithRollOverf(
             departureScheduleInfo?.departure?.time,
             baseDate,
-            previousArrivalTime
+            previousArrivalTime,
           );
           const departureTime = new Date(departureTimeStr);
           const departureDate = departureTimeStr.split("T")[0]; // Extract date part
@@ -2026,7 +2032,7 @@ async function postSabreFlightDataM(req, res) {
           const arrivalTimeStr = convertToISODateTimeWithRollOverf(
             departureScheduleInfo?.arrival?.time,
             baseDate,
-            departureTime
+            departureTime,
           );
           const arrivalTime = new Date(arrivalTimeStr);
           const arrivalDate = arrivalTimeStr.split("T")[0]; // Extract date part
@@ -2062,7 +2068,7 @@ async function postSabreFlightDataM(req, res) {
               departureScheduleInfo?.carrier?.operatingFlightNumber,
             marketing: marketingCarrier || "N/A",
             elapsedTime: convertMinutesToISODuration(
-              departureScheduleInfo?.elapsedTime || 0
+              departureScheduleInfo?.elapsedTime || 0,
             ),
             stopCount: departureScheduleInfo?.stopCount || 0,
           };
@@ -2084,7 +2090,7 @@ async function postSabreFlightDataM(req, res) {
         pricingInfo.totalFare.totalPrice,
         findMarkup,
         staffMarkupValue,
-        staffMarkupType
+        staffMarkupType,
       );
 
       // Fetch airline logo and details
@@ -2247,12 +2253,15 @@ async function revalidateItinerary(req, res) {
     const brnadCode = selectedBrandedFare.data[0].brandCode;
 
     const fareBasisList = selectedBrandedFare.data[0].brandInfo; // One per segment
-    // const fareBasisListCorrected = connectingFlights.map((_, idx) => {
-    //   return fareBasisList[idx] || fareBasisList[fareBasisList.length - 1];
-    // });
+
+    // NDC brand codes can be >10 chars (e.g. "CLASSIC-PCID") which OTA v4 schema rejects.
+    // Detect NDC: brand code longer than 10 chars OR contains a hyphen
+    const isNDCFlight = brnadCode && (brnadCode.length > 10 || brnadCode.includes("-"));
+    console.log(`[Revalidate] brandCode="${brnadCode}", isNDC=${isNDCFlight}`);
+
     let brandFilters = {};
-    if (brnadCode) {
-      // If brand exists
+    if (brnadCode && !isNDCFlight) {
+      // ATPCO branded fare — safe to send brand code to OTA revalidate (max 10 chars)
       brandFilters = {
         Brand: [
           {
@@ -2263,7 +2272,7 @@ async function revalidateItinerary(req, res) {
         NonBrandedFares: { PreferLevel: "Unacceptable" },
       };
     } else {
-      // If no brand, only use NonBrandedFares
+      // NDC fare OR no brand — OTA schema does not support NDC brand codes, skip Brand filter
       brandFilters = {
         NonBrandedFares: { PreferLevel: "Preferred" },
       };
@@ -2281,10 +2290,10 @@ async function revalidateItinerary(req, res) {
             Number: cFlight.marketingFlightNumber,
             Airline: { Marketing: cFlight.marketing },
             DepartureDateTime: formatDateTime(
-              `${cFlight.departure.date}T${cFlight.departure.time}`
+              `${cFlight.departure.date}T${cFlight.departure.time}`,
             ),
             ArrivalDateTime: formatDateTime(
-              `${cFlight.arrival.date}T${cFlight.arrival.time}`
+              `${cFlight.arrival.date}T${cFlight.arrival.time}`,
             ),
             ClassOfService: cFlight.bookingCode || "Y",
             OriginLocation: { LocationCode: cFlight.departure.airport },
@@ -2300,52 +2309,153 @@ async function revalidateItinerary(req, res) {
             TPA_Extensions: {
               Flight: flights,
               BrandFilters: brandFilters,
-              FareBasis: fareBasisList?.map((item) => (
-                {
-                  Code: item,
-                  PreferLevel: "Preferred",
-                }
-              )),
+              FareBasis: fareBasisList?.map((item) => ({
+                Code: item,
+                PreferLevel: "Preferred",
+              })),
             },
           };
-        }
+        },
       );
     } else {
+      // formattedOriginDestinationInformation = OriginDestinationInformation.map(
+      //   (item, idx) => {
+      //     const fareBasisCode =
+      //       fareBasisList[idx] || fareBasisList[fareBasisList.length - 1];
+
+      //     const fareComponents = selectedBrandedFare.data[0].fareComponents;
+      //     const segments = fareComponents.flatMap((fc) => fc.segments); // flatten all segments
+
+      //     return {
+      //       ...item,
+      //       DepartureDateTime: item.DepartureDateTime.replace(/\.\d+$/, ""),
+      //       TPA_Extensions: {
+      //         Flight: item.TPA_Extensions.Flight.map((flight, fIdx) => ({
+      //           ...flight,
+      //           DepartureDateTime: flight.DepartureDateTime.replace(
+      //             /\.\d+$/,
+      //             ""
+      //           ),
+      //           ArrivalDateTime: flight.ArrivalDateTime.replace(/\.\d+$/, ""),
+      //           // Assign ClassOfService from fareComponents segment bookingCode
+      //           ClassOfService:
+      //             segments[fIdx]?.bookingCode || flight.ClassOfService,
+      //         })),
+      //         BrandFilters: brandFilters,
+      //         FareBasis: [
+      //           {
+      //             Code: fareBasisCode,
+      //             PreferLevel: "Preferred",
+      //           },
+      //         ],
+      //       },
+      //     };
+      //   }
+      // );
       formattedOriginDestinationInformation = OriginDestinationInformation.map(
         (item, idx) => {
-          const fareBasisCode =
-            fareBasisList[idx] || fareBasisList[fareBasisList.length - 1];
-
           const fareComponents = selectedBrandedFare.data[0].fareComponents;
           const segments = fareComponents.flatMap((fc) => fc.segments); // flatten all segments
 
           return {
-            ...item,
+            RPH: item.RPH || String(idx),
             DepartureDateTime: item.DepartureDateTime.replace(/\.\d+$/, ""),
+            DestinationLocation: item.DestinationLocation,
+            OriginLocation: item.OriginLocation,
             TPA_Extensions: {
+              BrandFilters: brandFilters,
               Flight: item.TPA_Extensions.Flight.map((flight, fIdx) => ({
                 ...flight,
                 DepartureDateTime: flight.DepartureDateTime.replace(
                   /\.\d+$/,
-                  ""
+                  "",
                 ),
                 ArrivalDateTime: flight.ArrivalDateTime.replace(/\.\d+$/, ""),
-                // Assign ClassOfService from fareComponents segment bookingCode
                 ClassOfService:
                   segments[fIdx]?.bookingCode || flight.ClassOfService,
               })),
-              BrandFilters: brandFilters,
-              FareBasis: [
-                {
-                  Code: fareBasisCode,
-                  PreferLevel: "Preferred",
-                },
-              ],
             },
           };
-        }
+        },
       );
     }
+
+    // let body = {
+    //   OTA_AirLowFareSearchRQ: {
+    //     Version: "4",
+    //     POS: {
+    //       Source: [
+    //         {
+    //           PseudoCityCode: `${SABRE.SABRE_PCC}`,
+    //           RequestorID: {
+    //             Type: "1",
+    //             ID: "1",
+    //             CompanyName: {
+    //               Code: "TN",
+    //               content: "TN",
+    //             },
+    //           },
+    //         },
+    //       ],
+    //     },
+    //     OriginDestinationInformation: formattedOriginDestinationInformation,
+    //     TravelPreferences: {
+    //       TPA_Extensions: {
+    //         DataSources: {
+    //           NDC: "Disable",
+    //           ATPCO: "Enable",
+    //           LCC: "Enable",
+    //         },
+    //         PreferNDCSourceOnTie: {
+    //           Value: true,
+    //         },
+    //         VerificationItinCallLogic: {
+    //           Value: "B",
+    //           AlwaysCheckAvailability: true,
+    //         },
+    //         // FareBasis: FareBasis,
+    //       },
+    //       Baggage: { CarryOnInfo: true },
+    //       ETicketDesired: true,
+    //     },
+    //     TravelerInfoSummary: {
+    //       SeatsRequested: [SeatsRequested],
+    //       AirTravelerAvail: [
+    //         {
+    //           PassengerTypeQuantity: [
+    //             {
+    //               Code: "ADT",
+    //               Quantity: Number(adult),
+    //             },
+    //           ],
+    //         },
+    //       ],
+    //       PriceRequestInformation: {
+    //         CurrencyCode: "PKR",
+    //         NegotiatedFareCode: [
+    //           {
+    //             Code: "PKK45",
+    //             Supplier: [{ Code: "TN" }],
+    //           },
+    //         ],
+    //         TPA_Extensions: {
+    //           BrandedFareIndicators: {
+    //             MultipleBrandedFares: false,
+    //             ReturnBrandAncillaries: true,
+    //           },
+    //         },
+    //       },
+    //     },
+    //     AvailableFlightsOnly: true,
+    //     TPA_Extensions: {
+    //       IntelliSellTransaction: {
+    //         RequestType: {
+    //           Name: "50ITINS",
+    //         },
+    //       },
+    //     },
+    //   },
+    // };
 
     let body = {
       OTA_AirLowFareSearchRQ: {
@@ -2368,22 +2478,10 @@ async function revalidateItinerary(req, res) {
         OriginDestinationInformation: formattedOriginDestinationInformation,
         TravelPreferences: {
           TPA_Extensions: {
-            DataSources: {
-              NDC: "Disable",
-              ATPCO: "Enable",
-              LCC: "Enable",
-            },
-            PreferNDCSourceOnTie: {
-              Value: true,
-            },
             VerificationItinCallLogic: {
               Value: "B",
-              AlwaysCheckAvailability: true,
             },
-            // FareBasis: FareBasis,
           },
-          Baggage: { CarryOnInfo: true },
-          ETicketDesired: true,
         },
         TravelerInfoSummary: {
           SeatsRequested: [SeatsRequested],
@@ -2397,23 +2495,7 @@ async function revalidateItinerary(req, res) {
               ],
             },
           ],
-          PriceRequestInformation: {
-            CurrencyCode: "PKR",
-            NegotiatedFareCode: [
-              {
-                Code: "PKK45",
-                Supplier: [{ Code: "TN" }],
-              },
-            ],
-            TPA_Extensions: {
-              BrandedFareIndicators: {
-                MultipleBrandedFares: false,
-                ReturnBrandAncillaries: true,
-              },
-            },
-          },
         },
-        AvailableFlightsOnly: true,
         TPA_Extensions: {
           IntelliSellTransaction: {
             RequestType: {
@@ -2427,18 +2509,18 @@ async function revalidateItinerary(req, res) {
     // return successResponse(res, "Flight data fetched successfully", body);
     if (Number(children) > 0) {
       body.OTA_AirLowFareSearchRQ.TravelerInfoSummary.AirTravelerAvail[0].PassengerTypeQuantity.push(
-        { Code: "CNN", Quantity: Number(children) }
+        { Code: "CNN", Quantity: Number(children) },
       );
     }
     if (Number(infants) > 0) {
       body.OTA_AirLowFareSearchRQ.TravelerInfoSummary.AirTravelerAvail[0].PassengerTypeQuantity.push(
-        { Code: "INF", Quantity: Number(infants) }
+        { Code: "INF", Quantity: Number(infants) },
       );
     }
     // return errorResponse(res, body, 404);
     const flightData = await postFlightData(
       `${SABRE.BASE_URL}/v4/shop/flights/revalidate`,
-      body
+      body,
     );
     // return errorResponse(res, flightData, 404);
     let totalCount = Number(adult) + Number(children) + Number(infants);
@@ -2449,7 +2531,7 @@ async function revalidateItinerary(req, res) {
       console.log("Multi City");
       function getFlightStartTimes(input) {
         const startTimes = input.OriginDestinationInformation.map(
-          (info) => info.DepartureDateTime
+          (info) => info.DepartureDateTime,
         );
         return startTimes;
       }
@@ -2472,13 +2554,13 @@ async function revalidateItinerary(req, res) {
 
         const pricingInfo = itinerary?.pricingInformation?.[0]?.fare;
         const adults = pricingInfo?.passengerInfoList.find(
-          (p) => p.passengerInfo.passengerType === "ADT"
+          (p) => p.passengerInfo.passengerType === "ADT",
         );
         const children = pricingInfo?.passengerInfoList.find(
-          (p) => p.passengerInfo.passengerType === "CNN"
+          (p) => p.passengerInfo.passengerType === "CNN",
         );
         const infants = pricingInfo?.passengerInfoList.find(
-          (p) => p.passengerInfo.passengerType === "INF"
+          (p) => p.passengerInfo.passengerType === "INF",
         );
 
         // Extract total available seats, meal info, and refundability
@@ -2490,7 +2572,7 @@ async function revalidateItinerary(req, res) {
         let adultBookingCode = [];
         let adultBaggage = getBaggageInfo(
           adults.passengerInfo.baggageInformation,
-          baggageAllowanceDesc
+          baggageAllowanceDesc,
         );
 
         // Check if passenger information has refundable status
@@ -2513,7 +2595,7 @@ async function revalidateItinerary(req, res) {
 
             if (segment?.cabinCode)
               adultCabin.push(
-                cabinTypeMap[segment?.cabinCode] || segment?.cabinCode
+                cabinTypeMap[segment?.cabinCode] || segment?.cabinCode,
               );
           });
         });
@@ -2527,7 +2609,7 @@ async function revalidateItinerary(req, res) {
         if (children) {
           childBaggage = getBaggageInfo(
             children.passengerInfo.baggageInformation,
-            baggageAllowanceDesc
+            baggageAllowanceDesc,
           );
           // Check if passenger information has refundable status
           childIsRefundable = !adults?.passengerInfo.nonRefundable;
@@ -2554,7 +2636,7 @@ async function revalidateItinerary(req, res) {
         if (infants) {
           infantBaggage = getBaggageInfo(
             infants.passengerInfo.baggageInformation,
-            baggageAllowanceDesc
+            baggageAllowanceDesc,
           );
           // Check if passenger information has refundable status
           infantIsRefundable = !adults?.passengerInfo.nonRefundable;
@@ -2616,7 +2698,7 @@ async function revalidateItinerary(req, res) {
             const departureTimeStr = convertToISODateTimeWithRollOverf(
               departureScheduleInfo?.departure?.time,
               baseDate,
-              previousArrivalTime
+              previousArrivalTime,
             );
             const departureTime = new Date(departureTimeStr);
             const departureDate = departureTimeStr.split("T")[0]; // Extract date part
@@ -2625,7 +2707,7 @@ async function revalidateItinerary(req, res) {
             const arrivalTimeStr = convertToISODateTimeWithRollOverf(
               departureScheduleInfo?.arrival?.time,
               baseDate,
-              departureTime
+              departureTime,
             );
             const arrivalTime = new Date(arrivalTimeStr);
             const arrivalDate = arrivalTimeStr.split("T")[0]; // Extract date part
@@ -2634,7 +2716,7 @@ async function revalidateItinerary(req, res) {
             if (scheduleIndex > 0 && previousArrivalTime) {
               layoverTime = calculateLayoverTime(
                 previousArrivalTime,
-                departureTime
+                departureTime,
               );
             }
 
@@ -2677,7 +2759,7 @@ async function revalidateItinerary(req, res) {
                 departureScheduleInfo?.carrier?.operatingFlightNumber,
               marketing: departureScheduleInfo?.carrier?.marketing || "N/A",
               elapsedTime: convertMinutesToISODuration(
-                departureScheduleInfo?.elapsedTime || 0
+                departureScheduleInfo?.elapsedTime || 0,
               ),
               layoverTime: layoverTime,
               stopCount: departureScheduleInfo?.stopCount || 0,
@@ -2687,11 +2769,11 @@ async function revalidateItinerary(req, res) {
 
         // Calculate adjusted price based on markup type
         const basePrice = Number(
-          itinerary?.pricingInformation?.[0]?.fare?.totalFare?.totalPrice || 0
+          itinerary?.pricingInformation?.[0]?.fare?.totalFare?.totalPrice || 0,
         );
         const baseFare = Number(
           itinerary?.pricingInformation?.[0]?.fare?.totalFare
-            ?.equivalentAmount || 0
+            ?.equivalentAmount || 0,
         );
         // adjustedPrice = Number(
         //   itinerary?.pricingInformation?.[0]?.fare?.totalFare?.totalPrice || 0
@@ -2707,7 +2789,7 @@ async function revalidateItinerary(req, res) {
           findMarkup,
           staffMarkupValue,
           staffMarkupType,
-          airlineName
+          airlineName,
         );
         let netfare =
           itinerary?.pricingInformation?.[0]?.fare?.totalFare?.totalPrice;
@@ -2832,7 +2914,7 @@ async function revalidateItinerary(req, res) {
     const processedItineraries = itineraries.map((itinerary) => {
       const uniqueId = v4();
       const departureLeg = legsDesc.find(
-        (leg) => leg.id === itinerary.legs[0].ref
+        (leg) => leg.id === itinerary.legs[0].ref,
       );
       const returnLeg =
         itinerary.legs.length > 1
@@ -2858,7 +2940,7 @@ async function revalidateItinerary(req, res) {
             // ---- Brand (brandName + brandCode) ----
             const brandData = getbrandNameInfo(
               p.fareComponents,
-              fareComponentDescs
+              fareComponentDescs,
             );
 
             const brandFare = brandData?.[0]
@@ -2891,14 +2973,14 @@ async function revalidateItinerary(req, res) {
               (component) => {
                 // Find the matching fareComponentDesc using the "ref"
                 const matchedDesc = fareComponentDescs.find(
-                  (desc) => desc.id === component.ref
+                  (desc) => desc.id === component.ref,
                 );
 
                 console.log("🔍 fareComponent.ref:", component.ref);
                 console.log("🔍 matched fareComponentDesc:", matchedDesc);
 
                 return matchedDesc ? matchedDesc.fareBasisCode : null;
-              }
+              },
             );
             return {
               brandFare, // { brandName, brandCode }
@@ -2914,13 +2996,13 @@ async function revalidateItinerary(req, res) {
         .filter(Boolean);
 
       const adults = pricingInfo?.passengerInfoList.find(
-        (p) => p.passengerInfo.passengerType === "ADT"
+        (p) => p.passengerInfo.passengerType === "ADT",
       );
       const children = pricingInfo?.passengerInfoList.find(
-        (p) => p.passengerInfo.passengerType === "CNN"
+        (p) => p.passengerInfo.passengerType === "CNN",
       );
       const infants = pricingInfo?.passengerInfoList.find(
-        (p) => p.passengerInfo.passengerType === "INF"
+        (p) => p.passengerInfo.passengerType === "INF",
       );
 
       let adultTotalSeatsAvailable = 0;
@@ -2931,8 +3013,8 @@ async function revalidateItinerary(req, res) {
       let adultBaggage = transformBaggageInfo(
         getBaggageInfo(
           adults.passengerInfo.baggageInformation,
-          baggageAllowanceDesc
-        )
+          baggageAllowanceDesc,
+        ),
       );
 
       // Check if passenger information has refundable status
@@ -2962,7 +3044,7 @@ async function revalidateItinerary(req, res) {
       if (children) {
         childBaggage = getBaggageInfo(
           children.passengerInfo.baggageInformation,
-          baggageAllowanceDesc
+          baggageAllowanceDesc,
         );
         // Check if passenger information has refundable status
         childIsRefundable = !adults?.passengerInfo.nonRefundable;
@@ -2979,7 +3061,7 @@ async function revalidateItinerary(req, res) {
             }
             if (segment.cabinCode)
               childCabin.push(
-                cabinTypeMap[segment.cabinCode] || segment.cabinCode
+                cabinTypeMap[segment.cabinCode] || segment.cabinCode,
               ); // Map cabin code to full name
           });
         });
@@ -2992,7 +3074,7 @@ async function revalidateItinerary(req, res) {
       if (infants) {
         infantBaggage = getBaggageInfo(
           infants.passengerInfo.baggageInformation,
-          baggageAllowanceDesc
+          baggageAllowanceDesc,
         );
         // Check if passenger information has refundable status
         infantIsRefundable = !adults?.passengerInfo.nonRefundable;
@@ -3009,7 +3091,7 @@ async function revalidateItinerary(req, res) {
             }
             if (segment.cabinCode)
               infantCabin.push(
-                cabinTypeMap[segment.cabinCode] || segment.cabinCode
+                cabinTypeMap[segment.cabinCode] || segment.cabinCode,
               ); // Map cabin code to full name
           });
         });
@@ -3051,7 +3133,7 @@ async function revalidateItinerary(req, res) {
         const departureTimeStr = convertToISODateTimeWithRollOverf(
           detail.departure.time,
           groupDescription[0]?.departureDate,
-          previousArrivalTime
+          previousArrivalTime,
         );
         const departureTime = new Date(departureTimeStr);
 
@@ -3060,7 +3142,7 @@ async function revalidateItinerary(req, res) {
         const arrivalTimeStr = convertToISODateTimeWithRollOverf(
           detail.arrival.time,
           groupDescription[0]?.departureDate,
-          departureTime
+          departureTime,
         );
         const arrivalTime = new Date(arrivalTimeStr);
 
@@ -3068,7 +3150,7 @@ async function revalidateItinerary(req, res) {
         if (index > 0 && previousArrivalTime) {
           layoverTime = calculateLayoverTime(
             previousArrivalTime,
-            departureTime
+            departureTime,
           );
         }
 
@@ -3101,7 +3183,7 @@ async function revalidateItinerary(req, res) {
           const departureTimeStr = convertToISODateTimeWithRollOverf(
             detail.departure.time,
             groupDescription[1].departureDate,
-            previousReturnArrivalTime
+            previousReturnArrivalTime,
           );
           const departureTime = new Date(departureTimeStr);
 
@@ -3110,7 +3192,7 @@ async function revalidateItinerary(req, res) {
           const arrivalTimeStr = convertToISODateTimeWithRollOverf(
             detail.arrival.time,
             groupDescription[1].departureDate,
-            departureTime
+            departureTime,
           );
           const arrivalTime = new Date(arrivalTimeStr);
 
@@ -3118,7 +3200,7 @@ async function revalidateItinerary(req, res) {
           if (index > 0 && previousReturnArrivalTime) {
             layoverTime = calculateLayoverTime(
               previousReturnArrivalTime,
-              departureTime
+              departureTime,
             );
           }
 
@@ -3137,7 +3219,7 @@ async function revalidateItinerary(req, res) {
             stopCount: detail.stopCount,
             layoverTime,
             logo: airlineLogoMap[detail.carrier.marketing],
-            operatingLogo: airlineLogoMap[detail.carrier.operating]
+            operatingLogo: airlineLogoMap[detail.carrier.operating],
           };
         })
         : null;
@@ -3147,14 +3229,14 @@ async function revalidateItinerary(req, res) {
         findMakrup,
         staffMarkupValue,
         staffMarkupType,
-        carrierCode
+        carrierCode,
       );
       netFare = pricingInfo.totalFare.totalPrice;
       const ticketTaxes = pricingInfo.passengerInfoList
         .flatMap((p) => p.passengerInfo.taxes)
         .map((tax) => {
           const taxDetail = taxDescriptions.find(
-            (desc) => desc?.id === tax?.ref
+            (desc) => desc?.id === tax?.ref,
           );
           return {
             amount: taxDetail ? taxDetail.amount : 0,
@@ -3276,7 +3358,7 @@ async function postSabreCityData(req, res) {
           Authorization: `Bearer ${getAccessToken()}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
     if (!response.ok) {
       const data = await response.json();
@@ -3288,7 +3370,7 @@ async function postSabreCityData(req, res) {
     return successResponse(
       res,
       "City data fetched successfully",
-      formattedData
+      formattedData,
     );
   } catch (error) {
     console.log(error);
@@ -3423,18 +3505,18 @@ async function createBooking(req, res) {
         GivenName:
           getGenderCode(passenger.travelerType) === "INF"
             ? "INF"
-            : passenger.name.firstName,
+            : passenger.name.firstName?.toUpperCase(),
 
-        Surname: passenger.name.lastName,
+        Surname: passenger.name.lastName?.toUpperCase(),
         // NameReference: `${passenger.name.firstName}${[index + 1]}`,
         PassengerType: getGenderCode(passenger.travelerType),
         NameReference:
-          getGenderCode(passenger.travelerType) === "CNN"
-            ? `C${calculateAgeInYears(passenger.dateOfBirth)}`
-            : getGenderCode(passenger.travelerType) === "INF"
-              ? `I${calculateAgeInMonths(passenger.dateOfBirth)}`
-              : `A${calculateAgeInYears(passenger.dateOfBirth)}`,
-
+          // getGenderCode(passenger.travelerType) === "CNN"
+          //   ? `C${calculateAgeInYears(passenger.dateOfBirth)}`
+          //   : getGenderCode(passenger.travelerType) === "INF"
+          //     ? `I${calculateAgeInMonths(passenger.dateOfBirth)}`
+          //     : `A${calculateAgeInYears(passenger.dateOfBirth)}`
+          "",
         // Gender: passenger.gender || "M",
         Infant: getGenderCode(passenger.travelerType) === "INF" ? true : false,
       };
@@ -3453,9 +3535,9 @@ async function createBooking(req, res) {
               GivenName:
                 getGenderCode(passenger.travelerType) === "INF"
                   ? "INF"
-                  : passenger.name.firstName,
+                  : passenger.name.firstName?.toUpperCase(),
               DateOfBirth: passenger.dateOfBirth,
-              Surname: passenger.name.lastName,
+              Surname: passenger.name.lastName?.toUpperCase(),
               // NameReference: `${passenger.name.firstName}${[index + 1]}`,
               Gender:
                 getGenderCode(passenger.travelerType) === "INF"
@@ -3531,8 +3613,8 @@ async function createBooking(req, res) {
               GivenName:
                 getGenderCode(passenger.travelerType) === "INF"
                   ? passenger.name.firstName.replace("Mstr", "INF")
-                  : passenger.name.firstName,
-              Surname: passenger.name.lastName,
+                  : passenger.name.firstName?.toUpperCase(),
+              Surname: passenger.name.lastName?.toUpperCase(),
               LapChild:
                 getGenderCode(passenger.travelerType) === "INF" ? true : false,
               Gender:
@@ -3701,7 +3783,7 @@ async function createBooking(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(bookingRequest),
-      }
+      },
     );
     const bookingData = await response.json();
     // return errorResponse(res, bookingData, 404);
@@ -3748,7 +3830,7 @@ async function createBooking(req, res) {
             .split("T")[0];
         if (traveller.documents[0].expiryDate)
           traveller.documents[0].expiryDate = new Date(
-            traveller.documents[0].expiryDate
+            traveller.documents[0].expiryDate,
           )
             .toISOString()
             .split("T")[0];
@@ -3800,11 +3882,11 @@ async function createBooking(req, res) {
 
           saveTraveller = await pax.save();
           console.log(
-            `Traveller saved: ${traveller.name.firstName} ${traveller.name.lastName}`
+            `Traveller saved: ${traveller.name.firstName} ${traveller.name.lastName}`,
           );
         } else {
           console.log(
-            `Traveller already exists: ${traveller.name.firstName} ${traveller.name.lastName}`
+            `Traveller already exists: ${traveller.name.firstName} ${traveller.name.lastName}`,
           );
         }
       }
@@ -3885,7 +3967,7 @@ async function createBooking(req, res) {
               duration: val.ElapsedTime,
               meals: flightOffers[index]?.meal
                 ? MEAL_CODES.includes(
-                  flightOffers[index]?.meal.trim().toUpperCase()
+                  flightOffers[index]?.meal.trim().toUpperCase(),
                 )
                 : false,
               className: val.Cabin.Name,
@@ -4093,18 +4175,18 @@ async function createBookingg(Nada, user, res) {
         GivenName:
           getGenderCode(passenger.travelerType) === "INF"
             ? "INF"
-            : passenger.name.firstName,
+            : passenger.name.firstName?.toUpperCase(),
 
-        Surname: passenger.name.lastName,
+        Surname: passenger.name.lastName?.toUpperCase(),
         // NameReference: `${passenger.name.firstName}${[index + 1]}`,
         PassengerType: getGenderCode(passenger.travelerType),
         NameReference:
-          getGenderCode(passenger.travelerType) === "CNN"
-            ? `C${calculateAgeInYears(passenger.dateOfBirth)}`
-            : getGenderCode(passenger.travelerType) === "INF"
-              ? `I${calculateAgeInMonths(passenger.dateOfBirth)}`
-              : `A${calculateAgeInYears(passenger.dateOfBirth)}`,
-
+          // getGenderCode(passenger.travelerType) === "CNN"
+          //   ? `C${calculateAgeInYears(passenger.dateOfBirth)}`
+          //   : getGenderCode(passenger.travelerType) === "INF"
+          //     ? `I${calculateAgeInMonths(passenger.dateOfBirth)}`
+          //     : `A${calculateAgeInYears(passenger.dateOfBirth)}`
+          "",
         // Gender: passenger.gender || "M",
         Infant: getGenderCode(passenger.travelerType) === "INF" ? true : false,
       };
@@ -4123,9 +4205,9 @@ async function createBookingg(Nada, user, res) {
               GivenName:
                 getGenderCode(passenger.travelerType) === "INF"
                   ? "INF"
-                  : passenger.name.firstName,
+                  : passenger.name.firstName?.toUpperCase(),
               DateOfBirth: passenger.dateOfBirth,
-              Surname: passenger.name.lastName,
+              Surname: passenger.name.lastName?.toUpperCase(),
               // NameReference: `${passenger.name.firstName}${[index + 1]}`,
               Gender:
                 getGenderCode(passenger.travelerType) === "INF"
@@ -4201,8 +4283,8 @@ async function createBookingg(Nada, user, res) {
               GivenName:
                 getGenderCode(passenger.travelerType) === "INF"
                   ? passenger.name.firstName.replace("Mstr", "INF")
-                  : passenger.name.firstName,
-              Surname: passenger.name.lastName,
+                  : passenger.name.firstName?.toUpperCase(),
+              Surname: passenger.name.lastName?.toUpperCase(),
               LapChild:
                 getGenderCode(passenger.travelerType) === "INF" ? true : false,
               Gender:
@@ -4369,7 +4451,7 @@ async function createBookingg(Nada, user, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(bookingRequest),
-      }
+      },
     );
     const bookingData = await response.json();
     if (
@@ -4409,7 +4491,7 @@ async function createBookingg(Nada, user, res) {
             .split("T")[0];
         if (traveller.documents[0].expiryDate)
           traveller.documents[0].expiryDate = new Date(
-            traveller.documents[0].expiryDate
+            traveller.documents[0].expiryDate,
           )
             .toISOString()
             .split("T")[0];
@@ -4461,11 +4543,11 @@ async function createBookingg(Nada, user, res) {
 
           saveTraveller = await pax.save();
           console.log(
-            `Traveller saved: ${traveller.name.firstName} ${traveller.name.lastName}`
+            `Traveller saved: ${traveller.name.firstName} ${traveller.name.lastName}`,
           );
         } else {
           console.log(
-            `Traveller already exists: ${traveller.name.firstName} ${traveller.name.lastName}`
+            `Traveller already exists: ${traveller.name.firstName} ${traveller.name.lastName}`,
           );
         }
       }
@@ -4677,8 +4759,9 @@ async function createBookingM(req, res) {
 
       return {
         NameNumber: `${idx + 1}.1`,
-        GivenName: typeCode === "INF" ? "INF" : pax.name.firstName,
-        Surname: pax.name.lastName,
+        GivenName:
+          typeCode === "INF" ? "INF" : pax.name.firstName?.toUpperCase(),
+        Surname: pax.name.lastName?.toUpperCase(),
         PassengerType: typeCode,
         NameReference:
           typeCode === "CNN"
@@ -4706,8 +4789,8 @@ async function createBookingM(req, res) {
               GivenName:
                 getGenderCode(pax.travelerType) === "INF"
                   ? "INF"
-                  : pax.name.firstName,
-              Surname: pax.name.lastName,
+                  : pax.name.firstName?.toUpperCase(),
+              Surname: pax.name.lastName?.toUpperCase(),
               Gender:
                 getGenderCode(pax.travelerType) === "INF"
                   ? "FI"
@@ -4760,8 +4843,8 @@ async function createBookingM(req, res) {
               GivenName:
                 getGenderCode(pax.travelerType) === "INF"
                   ? pax.name.firstName.replace("Mstr", "INF")
-                  : pax.name.firstName,
-              Surname: pax.name.lastName,
+                  : pax.name.firstName?.toUpperCase(),
+              Surname: pax.name.lastName?.toUpperCase(),
               LapChild: getGenderCode(pax.travelerType) === "INF",
               Gender:
                 getGenderCode(pax.travelerType) === "INF"
@@ -4891,7 +4974,7 @@ async function createBookingM(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(bookingRequest),
-      }
+      },
     );
     const bookingData = await response.json();
     if (
@@ -4912,7 +4995,7 @@ async function createBookingM(req, res) {
         console.log("\n---------------------------------------------");
         console.log(
           "Processing traveller:",
-          JSON.stringify(traveller, null, 2)
+          JSON.stringify(traveller, null, 2),
         );
 
         // --- Extract Title from firstName ---
@@ -4941,14 +5024,14 @@ async function createBookingM(req, res) {
 
         if (traveller.documents[0]?.expiryDate) {
           traveller.documents[0].expiryDate = new Date(
-            traveller.documents[0].expiryDate
+            traveller.documents[0].expiryDate,
           )
             .toISOString()
             .split("T")[0];
 
           console.log(
             "Converted Document Expiry:",
-            traveller.documents[0].expiryDate
+            traveller.documents[0].expiryDate,
           );
         }
 
@@ -4971,13 +5054,13 @@ async function createBookingM(req, res) {
 
         console.log(
           "Travellers found with same name:",
-          sameNameTravellers.length
+          sameNameTravellers.length,
         );
 
         sameNameTravellers.forEach((t, i) => {
           console.log(
             `  [${i + 1}] Code: ${t.code}, CNIC: ${t.cnic}, Passport: ${t.passportNumber
-            }`
+            }`,
           );
         });
 
@@ -5010,7 +5093,7 @@ async function createBookingM(req, res) {
         // If SAME traveller found → do nothing
         if (existingTraveller) {
           console.log(
-            `Skipping save → Traveller already exists: ${firstName} ${traveller.name.lastName}`
+            `Skipping save → Traveller already exists: ${firstName} ${traveller.name.lastName}`,
           );
           continue;
         }
@@ -5058,7 +5141,7 @@ async function createBookingM(req, res) {
         saveTraveller = await pax.save();
 
         console.log(
-          `Traveller SAVED successfully: ${firstName} ${traveller.name.lastName} (Code: ${finalCode})`
+          `Traveller SAVED successfully: ${firstName} ${traveller.name.lastName} (Code: ${finalCode})`,
         );
       }
 
@@ -5138,7 +5221,7 @@ async function createBookingM(req, res) {
                 duration: val.ElapsedTime,
                 meals: flightOffers[index]?.meal
                   ? MEAL_CODES.includes(
-                    flightOffers[index]?.meal.trim().toUpperCase()
+                    flightOffers[index]?.meal.trim().toUpperCase(),
                   )
                   : false,
                 className: val.Cabin.Name,
@@ -5205,7 +5288,7 @@ async function createBookingMM(req, res) {
 
     // Count non-infant travelers
     const adultCount = travelers.filter(
-      (t) => t.travelerType !== "INFANT"
+      (t) => t.travelerType !== "INFANT",
     ).length;
     console.log(";logd Number of non-infant travelers", adultCount);
 
@@ -5271,8 +5354,8 @@ async function createBookingMM(req, res) {
         GivenName:
           getGenderCode(passenger.travelerType) === "INF"
             ? "INF"
-            : passenger.name.firstName,
-        Surname: passenger.name.lastName,
+            : passenger.name.firstName?.toUpperCase(),
+        Surname: passenger.name.lastName?.toUpperCase(),
         PassengerType: getGenderCode(passenger.travelerType),
         NameReference:
           getGenderCode(passenger.travelerType) === "CNN"
@@ -5299,9 +5382,9 @@ async function createBookingMM(req, res) {
               GivenName:
                 getGenderCode(passenger.travelerType) === "INF"
                   ? "INF"
-                  : passenger.name.firstName,
+                  : passenger.name.firstName?.toUpperCase(),
               DateOfBirth: passenger.dateOfBirth,
-              Surname: passenger.name.lastName,
+              Surname: passenger.name.lastName?.toUpperCase(),
               Gender:
                 getGenderCode(passenger.travelerType) === "INF"
                   ? "FI"
@@ -5351,8 +5434,8 @@ async function createBookingMM(req, res) {
               GivenName:
                 getGenderCode(passenger.travelerType) === "INF"
                   ? passenger.name.firstName.replace("Mstr", "INF")
-                  : passenger.name.firstName,
-              Surname: passenger.name.lastName,
+                  : passenger.name.firstName?.toUpperCase(),
+              Surname: passenger.name.lastName?.toUpperCase(),
               LapChild: getGenderCode(passenger.travelerType) === "INF",
               Gender:
                 getGenderCode(passenger.travelerType) === "INF"
@@ -5445,7 +5528,7 @@ async function createBookingMM(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(bookingRequest),
-      }
+      },
     );
 
     const bookingData = await response.json();
@@ -5473,7 +5556,7 @@ async function createBookingMM(req, res) {
         console.log("\n---------------------------------------------");
         console.log(
           "Processing traveller:",
-          JSON.stringify(traveller, null, 2)
+          JSON.stringify(traveller, null, 2),
         );
 
         // --- Extract Title from firstName ---
@@ -5502,14 +5585,14 @@ async function createBookingMM(req, res) {
 
         if (traveller.documents[0]?.expiryDate) {
           traveller.documents[0].expiryDate = new Date(
-            traveller.documents[0].expiryDate
+            traveller.documents[0].expiryDate,
           )
             .toISOString()
             .split("T")[0];
 
           console.log(
             "Converted Document Expiry:",
-            traveller.documents[0].expiryDate
+            traveller.documents[0].expiryDate,
           );
         }
 
@@ -5532,13 +5615,13 @@ async function createBookingMM(req, res) {
 
         console.log(
           "Travellers found with same name:",
-          sameNameTravellers.length
+          sameNameTravellers.length,
         );
 
         sameNameTravellers.forEach((t, i) => {
           console.log(
             `  [${i + 1}] Code: ${t.code}, CNIC: ${t.cnic}, Passport: ${t.passportNumber
-            }`
+            }`,
           );
         });
 
@@ -5571,7 +5654,7 @@ async function createBookingMM(req, res) {
         // If SAME traveller found → do nothing
         if (existingTraveller) {
           console.log(
-            `Skipping save → Traveller already exists: ${firstName} ${traveller.name.lastName}`
+            `Skipping save → Traveller already exists: ${firstName} ${traveller.name.lastName}`,
           );
           continue;
         }
@@ -5619,7 +5702,7 @@ async function createBookingMM(req, res) {
         saveTraveller = await pax.save();
 
         console.log(
-          `Traveller SAVED successfully: ${firstName} ${traveller.name.lastName} (Code: ${finalCode})`
+          `Traveller SAVED successfully: ${firstName} ${traveller.name.lastName} (Code: ${finalCode})`,
         );
       }
 
@@ -5693,7 +5776,7 @@ async function createBookingMM(req, res) {
               duration: val.ElapsedTime,
               meals: flightOffers[index]?.meal
                 ? MEAL_CODES.includes(
-                  flightOffers[index]?.meal.trim().toUpperCase()
+                  flightOffers[index]?.meal.trim().toUpperCase(),
                 )
                 : false,
               className: val.Cabin.Name,
@@ -5764,7 +5847,7 @@ async function issueTicket(req, res) {
       return errorResponse(
         res,
         "Insufficient balance. Please recharge your account.",
-        404
+        404,
       );
     }
     // if (
@@ -5873,7 +5956,7 @@ async function issueTicket(req, res) {
       const updatedTravelers = findbooking.travelers.map((traveler, index) => {
         console.log(
           "TICKET NUMBER",
-          bookingData.AirTicketRS?.Summary?.[index]?.DocumentNumber
+          bookingData.AirTicketRS?.Summary?.[index]?.DocumentNumber,
         );
         const ticketInfo =
           bookingData.AirTicketRS?.Summary?.[index]?.DocumentNumber;
@@ -5893,7 +5976,7 @@ async function issueTicket(req, res) {
           isTicketed: true,
           travelers: updatedTravelers,
         },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
 
       console.log("detucting the amount from the wallet...... ");
@@ -5911,7 +5994,7 @@ async function issueTicket(req, res) {
         await Agency.findByIdAndUpdate(
           agency._id,
           { cashLimit: currentBalance - finalPrice },
-          { new: true, runValidators: true }
+          { new: true, runValidators: true },
         );
       } else {
         console.log(`detucting the amount  agent ${user.role}`);
@@ -5919,7 +6002,7 @@ async function issueTicket(req, res) {
         await User.findByIdAndUpdate(
           user._id,
           { allocatedBalance: currentBalance - finalPrice },
-          { new: true, runValidators: true }
+          { new: true, runValidators: true },
         );
       }
 
@@ -5983,17 +6066,17 @@ async function issueTicket(req, res) {
 
       const hasPriceExpired = warnings.some((w) =>
         w.SystemSpecificResults?.some((r) =>
-          r.Message?.some((m) => m.content?.includes("PRICE QUOTE EXPIRED"))
-        )
+          r.Message?.some((m) => m.content?.includes("PRICE QUOTE EXPIRED")),
+        ),
       );
       if (hasPriceExpired) {
         console.log(
-          "Your price quote has expired. Please re-price and try again."
+          "Your price quote has expired. Please re-price and try again.",
         );
         return errorResponse(
           res,
           "Your price quote has expired. Please re-price and try again.",
-          400
+          400,
         );
       }
       console.error("Ticket issuance failed:", bookingData.AirTicketRS);
@@ -6038,7 +6121,7 @@ async function issueTicketOffline(req, res) {
       return errorResponse(
         res,
         "Insufficient balance. Please recharge your account.",
-        404
+        404,
       );
     }
     // if (
@@ -6148,7 +6231,7 @@ async function issueTicketOffline(req, res) {
       // Build itineraries from grouped flights
       const itineraries = Object.values(groupedFlights).map((flightGroup) => ({
         duration: `${Math.floor(
-          flightGroup.reduce((acc, f) => acc + f.durationInMinutes, 0) / 60
+          flightGroup.reduce((acc, f) => acc + f.durationInMinutes, 0) / 60,
         )}H${flightGroup.reduce((acc, f) => acc + f.durationInMinutes, 0) % 60
           }M`,
         segments: flightGroup.map((flight) => ({
@@ -6184,8 +6267,8 @@ async function issueTicketOffline(req, res) {
         id: (index + 1).toString(), // Traveler ID as "1", "2", etc.
         dateOfBirth: traveler?.dateOfBirth,
         name: {
-          firstName: traveler?.givenName,
-          lastName: traveler?.surname,
+          firstName: traveler?.givenName?.toUpperCase(),
+          lastName: traveler?.surname?.toUpperCase(),
         },
         ...(traveler?.identityDocuments?.length && {
           gender: traveler?.identityDocuments?.[0].gender,
@@ -6280,7 +6363,7 @@ async function issueTicketOffline(req, res) {
         await Agency.findByIdAndUpdate(
           agency._id,
           { $inc: { cashLimit: -Number(totalPrice) } },
-          { new: true, runValidators: true }
+          { new: true, runValidators: true },
         );
       } else {
         console.log(`detucting the amount  agent ${user.role}`);
@@ -6288,7 +6371,7 @@ async function issueTicketOffline(req, res) {
         await User.findByIdAndUpdate(
           user._id,
           { $inc: { allocatedBalance: -Number(findBookings.finalPrice) } },
-          { new: true, runValidators: true }
+          { new: true, runValidators: true },
         );
       }
       //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -6477,7 +6560,7 @@ async function issueTickett(Nada, us, res) {
       const updatedTravelers = findbooking.travelers.map((traveler, index) => {
         console.log(
           "TICKET NUMBER",
-          bookingData.AirTicketRS?.Summary?.[index]?.DocumentNumber
+          bookingData.AirTicketRS?.Summary?.[index]?.DocumentNumber,
         );
         const ticketInfo =
           bookingData.AirTicketRS?.Summary?.[index]?.DocumentNumber;
@@ -6495,7 +6578,7 @@ async function issueTickett(Nada, us, res) {
           isTicketed: true,
           travelers: updatedTravelers,
         },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
       console.log("detucting the amount from the wallet...... ");
       const finalPrice = Number(findBookings.finalPrice);
@@ -6512,7 +6595,7 @@ async function issueTickett(Nada, us, res) {
         await Agency.findByIdAndUpdate(
           agency._id,
           { cashLimit: currentBalance - finalPrice },
-          { new: true, runValidators: true }
+          { new: true, runValidators: true },
         );
       } else {
         console.log(`detucting the amount  agent ${user.role}`);
@@ -6520,7 +6603,7 @@ async function issueTickett(Nada, us, res) {
         await User.findByIdAndUpdate(
           user._id,
           { allocatedBalance: currentBalance - finalPrice },
-          { new: true, runValidators: true }
+          { new: true, runValidators: true },
         );
       }
       let spo;
@@ -6627,7 +6710,7 @@ async function bookAndIssueTicket(req, res) {
         return errorResponse(
           res,
           "Ticket is booked but, not issued due to insufficient balance. Please recharge your account.",
-          404
+          404,
         );
       }
     } else {
@@ -6638,7 +6721,7 @@ async function bookAndIssueTicket(req, res) {
         return errorResponse(
           res,
           "Ticket is booked but, not issued due to insufficient balance. Please recharge your account.",
-          404
+          404,
         );
       }
     }
@@ -6675,7 +6758,7 @@ async function bookAndIssueMTicket(req, res) {
     console.log("Booking Result:", bookingResult);
     console.log(
       "pnr",
-      bookingResult?.CreatePassengerNameRecordRS?.ItineraryRef?.ID
+      bookingResult?.CreatePassengerNameRecordRS?.ItineraryRef?.ID,
     );
     console.log("PNR", bookingResult?.data?.id);
     // return errorResponse(res,bookingResult,404)
@@ -6705,7 +6788,7 @@ async function bookAndIssueMTicket(req, res) {
       return errorResponse(
         res,
         "Ticket is booked but, not issued due to insufficient balance. Please recharge your account.",
-        404
+        404,
       );
     }
     const ticketResult = await issueTickett(req.body, req.user);
@@ -6819,7 +6902,7 @@ async function deleteBooking(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
-      }
+      },
     );
     const errorDetails = await amadeusResponse.json();
     console.log("error", errorDetails);
@@ -6835,14 +6918,14 @@ async function deleteBooking(req, res) {
       return errorResponse(
         res,
         `Failed to delete booking: ${amadeusResponse.status} ${amadeusResponse.statusText}. Details: ${errorDetails}`,
-        amadeusResponse.status
+        amadeusResponse.status,
       );
     }
     if (errorDetails.type === "NO_ITEMS_CANCELLED") {
       return errorResponse(
         res,
         `Failed to delete booking: ${amadeusResponse.status} ${amadeusResponse.statusText}. Details: ${errorDetails}`,
-        amadeusResponse.status
+        amadeusResponse.status,
       );
     }
     // const agency = await Agency.findById(booking.agencyId);
@@ -6861,7 +6944,7 @@ async function deleteBooking(req, res) {
       {
         status: ETicketStatus.CANCELLED,
       },
-      { new: true }
+      { new: true },
     );
     return successResponse(res, errorDetails, 200);
   } catch (error) {
@@ -6910,7 +6993,7 @@ async function repriceOrder(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-      }
+      },
     );
     console.log("sabre reprice", amadeusResponse);
     const bookingData = await amadeusResponse.json();
@@ -6929,7 +7012,7 @@ async function repriceOrder(req, res) {
       const updatedTravelers = findbooking.travelers.map((traveler, index) => {
         console.log(
           "TICKET NUMBER",
-          bookingData.AirTicketRS?.Summary?.[index]?.DocumentNumber
+          bookingData.AirTicketRS?.Summary?.[index]?.DocumentNumber,
         );
         const ticketInfo =
           bookingData.AirTicketRS?.Summary?.[index]?.DocumentNumber;
@@ -6948,7 +7031,7 @@ async function repriceOrder(req, res) {
           isTicketed: true,
           travelers: updatedTravelers,
         },
-        { new: true, runValidators: true }
+        { new: true, runValidators: true },
       );
       if (
         user.role === EUserRole.AGENCY ||
@@ -6958,7 +7041,7 @@ async function repriceOrder(req, res) {
         await Agency.findByIdAndUpdate(
           agency._id,
           { $inc: { cashLimit: -Number(findbooking.finalPrice) } },
-          { new: true, runValidators: true }
+          { new: true, runValidators: true },
         );
       } else {
         console.log("detucting the amount from the agent wallat...... ");
@@ -6966,7 +7049,7 @@ async function repriceOrder(req, res) {
         await User.findByIdAndUpdate(
           user._id,
           { $inc: { allocatedBalance: -Number(findbooking.finalPrice) } },
-          { new: true, runValidators: true }
+          { new: true, runValidators: true },
         );
       }
 
@@ -7027,7 +7110,7 @@ async function refundFlightTickets(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-      }
+      },
     );
 
     // Parse the response
@@ -7039,7 +7122,7 @@ async function refundFlightTickets(req, res) {
         res,
         `Failed to void PNR: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(amadeusResponse)}`,
-        response.status
+        response.status,
       );
     }
     await Booking.findByIdAndUpdate(
@@ -7047,12 +7130,12 @@ async function refundFlightTickets(req, res) {
       {
         status: ETicketStatus.REFUNDED,
       },
-      { new: true }
+      { new: true },
     );
     return successResponse(
       res,
       "refundFlightTickets successfully",
-      amadeusResponse
+      amadeusResponse,
     );
   } catch (error) {
     return errorResponse(res, error);
@@ -7094,7 +7177,7 @@ async function voidFlightTickets(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-      }
+      },
     );
 
     const sabreResponse = await response.json();
@@ -7106,7 +7189,7 @@ async function voidFlightTickets(req, res) {
         res,
         `Failed to void PNR: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(sabreResponse)}`,
-        response.status
+        response.status,
       );
     }
 
@@ -7122,7 +7205,7 @@ async function voidFlightTickets(req, res) {
         return errorResponse(
           res,
           `${err.type || "Error"}: ${err.description || "Unknown error"}`,
-          400
+          400,
         );
       }
     }
@@ -7131,13 +7214,13 @@ async function voidFlightTickets(req, res) {
     await Booking.findByIdAndUpdate(
       booking._id,
       { status: ETicketStatus.VOIDED },
-      { new: true }
+      { new: true },
     );
 
     return successResponse(
       res,
       "PNR voidFlightTickets successfully",
-      sabreResponse
+      sabreResponse,
     );
   } catch (error) {
     console.error("❌ voidFlightTickets error:", error);
@@ -7173,7 +7256,7 @@ async function checkFlightTickets(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-      }
+      },
     );
 
     // Parse the response
@@ -7185,14 +7268,14 @@ async function checkFlightTickets(req, res) {
         res,
         `Failed to void PNR: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(amadeusResponse)}`,
-        response.status
+        response.status,
       );
     }
 
     return successResponse(
       res,
       "PNR checkFlightTickets successfully",
-      amadeusResponse
+      amadeusResponse,
     );
   } catch (error) {
     return errorResponse(res, error);
@@ -7213,7 +7296,7 @@ async function getAirportInfo(iataCode) {
 
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     console.log(`📡 Sabre API status for ${iataCode}:`, response.status);
@@ -7265,8 +7348,7 @@ async function viewItinary(req, res) {
   try {
     await ensureToken();
 
-    const { pnr } = req.body;
-
+    let { pnr } = req.body;
     const booking = await Booking.findOne({ id: pnr }).populate({
       path: "agencyId",
       select:
@@ -7288,7 +7370,7 @@ async function viewItinary(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-      }
+      },
     );
     const amadeusResponse = await response.json();
     let flightOffers;
@@ -7300,7 +7382,7 @@ async function viewItinary(req, res) {
       return errorResponse(
         res,
         `${amadeusResponse.message}`,
-        amadeusResponse.status
+        amadeusResponse.status,
       );
     }
     let findBooking;
@@ -7324,7 +7406,7 @@ async function viewItinary(req, res) {
             const fromAirport = await getCachedAirport(fromCode);
             const toAirport = await getCachedAirport(toCode);
             const found = airlineLogos.find(
-              (a) => a.arCode === segment.marketing.carrierCode
+              (a) => a.arCode === segment.marketing.carrierCode,
             );
             return {
               fromAirportCode: fromCode,
@@ -7344,7 +7426,7 @@ async function viewItinary(req, res) {
               departureTerminalName: "",
               aircraftTypeCode: "",
             };
-          })
+          }),
         );
         flightData.push(...segmentsData);
       }
@@ -7408,7 +7490,7 @@ async function viewItinary(req, res) {
             airlineLogo: found?.logo || null,
             cabinTypeName: segment.className || segment.classCode || "",
           };
-        })
+        }),
       );
     };
     amadeusResponse.reference = booking._id;
@@ -7427,7 +7509,34 @@ async function viewItinary(req, res) {
       // }
       amadeusResponse.travelers = travellers;
     }
+    const creationDate = amadeusResponse.creationDetails?.creationDate;
 
+    if (!creationDate) {
+      console.log("No creationDate found");
+    }
+
+    const bookingYear = creationDate
+      ? creationDate.split("-")[0]
+      : new Date().getFullYear().toString();
+    const expiryInfo = extractExpiryFromADTK(
+      amadeusResponse.specialServices,
+      bookingYear,
+    );
+
+    if (expiryInfo) {
+      const expiryDateObj = new Date(expiryInfo.expiryDateTime);
+
+      amadeusResponse.paymentDeadline = expiryInfo;
+      await Booking.findOneAndUpdate(
+        { id: pnr },
+        {
+          ticketingTimeLimit: expiryDateObj,
+          ticketingTimeLimitText: amadeusResponse.specialServices.find(
+            (s) => s.code === "ADTK",
+          )?.message,
+        },
+      );
+    }
     amadeusResponse.agency = booking.agencyId;
     return successResponse(res, "view PNR successfully", {
       data: amadeusResponse,
@@ -7435,6 +7544,47 @@ async function viewItinary(req, res) {
   } catch (error) {
     return errorResponse(res, error);
   }
+}
+function extractExpiryFromADTK(specialServices, year) {
+  if (!specialServices) return null;
+
+  const adtk = specialServices.find((s) => s.code === "ADTK");
+  if (!adtk || !adtk.message) return null;
+
+  const regex = /BY\s(\d{2}[A-Z]{3})\s(\d{4})/;
+  const match = adtk.message.match(regex);
+
+  if (!match) return null;
+
+  const [_, datePart, timePart] = match;
+
+  const day = datePart.substring(0, 2);
+  const monthStr = datePart.substring(2);
+
+  const months = {
+    JAN: "01",
+    FEB: "02",
+    MAR: "03",
+    APR: "04",
+    MAY: "05",
+    JUN: "06",
+    JUL: "07",
+    AUG: "08",
+    SEP: "09",
+    OCT: "10",
+    NOV: "11",
+    DEC: "12",
+  };
+
+  const month = months[monthStr];
+  const formattedDate = `${year}-${month}-${day}`;
+  const formattedTime = `${timePart.substring(0, 2)}:${timePart.substring(2)}`;
+
+  return {
+    expiryDate: formattedDate,
+    expiryTime: formattedTime,
+    expiryDateTime: `${formattedDate}T${formattedTime}:00`,
+  };
 }
 async function updatePNR(req, res) {
   try {
@@ -7458,7 +7608,7 @@ async function updatePNR(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-      }
+      },
     );
 
     // Parse the response
@@ -7471,7 +7621,7 @@ async function updatePNR(req, res) {
         res,
         `Failed to get Booking: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(amadeusResponse)}`,
-        response.status
+        response.status,
       );
     }
     if (
@@ -7479,7 +7629,7 @@ async function updatePNR(req, res) {
       amadeusResponse.errors.some(
         (error) =>
           error.type === "BOOKING_NOT_FOUND" &&
-          error.description === "Booking cannot be found"
+          error.description === "Booking cannot be found",
       )
     ) {
       return errorResponse(res, `Booking not found on this  account`, 404);
@@ -7487,7 +7637,7 @@ async function updatePNR(req, res) {
     if (
       amadeusResponse.errors &&
       amadeusResponse.errors.some(
-        (error) => error.type === "UNAUTHORIZED_ACCESS"
+        (error) => error.type === "UNAUTHORIZED_ACCESS",
       )
     ) {
       return errorResponse(res, amadeusResponse.errors[0].description, 404);
@@ -7508,7 +7658,7 @@ async function updatePNR(req, res) {
           ticketNumber: null,
           status: "hold",
         },
-        200
+        200,
       );
     }
     if (
@@ -7523,7 +7673,7 @@ async function updatePNR(req, res) {
           ticketNumber: null,
           status: "hold",
         },
-        200
+        200,
       );
     }
     const flightTickets = amadeusResponse.flightTickets || [];
@@ -7546,7 +7696,7 @@ async function updatePNR(req, res) {
           ticketNumber,
           status: "confirmed",
         },
-        200
+        200,
       );
     }
     if (findBooking.status === "hold" && status === "Voided") {
@@ -7561,7 +7711,7 @@ async function updatePNR(req, res) {
           ticketNumber,
           status: "voided",
         },
-        200
+        200,
       );
     }
     if (findBooking.status === "confirmed" && status === "Voided") {
@@ -7576,7 +7726,7 @@ async function updatePNR(req, res) {
           ticketNumber,
           status: "voided",
         },
-        200
+        200,
       );
     }
     if (findBooking.status === "confirmed" && status === "Issued") {
@@ -7594,7 +7744,7 @@ async function updatePNR(req, res) {
           ticketNumber,
           status: "confirmed",
         },
-        200
+        200,
       );
     }
     if (findBooking.status === "voided" && status === "Voided") {
@@ -7612,7 +7762,7 @@ async function updatePNR(req, res) {
           ticketNumber: null,
           status: "hold",
         },
-        200
+        200,
       );
     }
     if (
@@ -7622,13 +7772,13 @@ async function updatePNR(req, res) {
       return successResponse(
         res,
         "ticket is hold but db contains confirmed status",
-        200
+        200,
       );
     } else {
       return errorResponse(
         res,
         "error occured contact administration department",
-        400
+        400,
       );
     }
   } catch (error) {
@@ -7653,7 +7803,7 @@ async function updateStatus(req, res) {
         return errorResponse(
           res,
           "Number of ticket numbers does not match the number of travelers",
-          400
+          400,
         );
       }
       updatedTravelers = findBooking.travelers.map((traveler, index) => {
@@ -7670,7 +7820,7 @@ async function updateStatus(req, res) {
     const updatedBooking = await Booking.findByIdAndUpdate(
       findBooking._id,
       updateFields,
-      { new: true }
+      { new: true },
     );
 
     return successResponse(res, "Booking updated successfully", updatedBooking);
@@ -7743,7 +7893,7 @@ async function importPNR(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-      }
+      },
     );
 
     const amadeusResponse = await response.json();
@@ -7751,15 +7901,15 @@ async function importPNR(req, res) {
     // Handle warnings and errors
     if (amadeusResponse.errors) {
       const hasWarnings = amadeusResponse.errors.some(
-        (error) => error.category === "WARNING"
+        (error) => error.category === "WARNING",
       );
       const hasErrors = amadeusResponse.errors.some(
-        (error) => error.category !== "WARNING"
+        (error) => error.category !== "WARNING",
       );
 
       if (hasErrors) {
         const errors = amadeusResponse.errors.filter(
-          (error) => error.category !== "WARNING"
+          (error) => error.category !== "WARNING",
         );
         console.error("Errors from Sabre API:", errors);
         return errorResponse(res, errors, 404);
@@ -7797,7 +7947,7 @@ async function importPNR(req, res) {
       totalFare,
       findMakrup,
       staffMarkupValue || 0,
-      staffMarkupType || 0
+      staffMarkupType || 0,
     );
     function calculateMarkups(staffMarkupValue, staffMarkupType, agencyMarkup) {
       let totalMarkup = 0;
@@ -7828,7 +7978,7 @@ async function importPNR(req, res) {
     amadeusResponse.markup = calculateMarkups(
       findMakrup,
       staffMarkupValue || 0,
-      staffMarkupType || 0
+      staffMarkupType || 0,
     );
     amadeusResponse.fares[0].totals.total = adjustedPrice.toFixed(3);
 
@@ -7888,8 +8038,8 @@ async function modifyPNR(req, res) {
         },
         travelers: Array.isArray(travelers)
           ? travelers.map((data, index) => ({
-            givenName: data.givenName,
-            surname: data.surname,
+            givenName: data.givenName?.toUpperCase(),
+            surname: data.surname?.toUpperCase(),
             type: data.type,
             passengerCode: data.passengerCode,
             birthDate: documentDetails?.[index]?.dateOfBirth || null,
@@ -7906,8 +8056,8 @@ async function modifyPNR(req, res) {
                   expiryDate: documentDetails[index]?.expiryDate || "",
                   isPrimaryDocumentHolder:
                     documentDetails[index]?.holder || false,
-                  givenName: data.givenName,
-                  surname: data.surname,
+                  givenName: data.givenName?.toUpperCase(),
+                  surname: data.surname?.toUpperCase(),
                   birthDate: documentDetails[index]?.dateOfBirth || "",
                 },
               ]
@@ -7933,7 +8083,7 @@ async function modifyPNR(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
-      }
+      },
     );
 
     const sabreResponse = await response.json();
@@ -7953,7 +8103,7 @@ async function modifyPNR(req, res) {
         res,
         `Failed to modify booking: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(sabreResponse)}`,
-        response.status
+        response.status,
       );
     }
     const bookingId = sabreResponse.bookingId;
@@ -8046,7 +8196,7 @@ async function modifyPNR(req, res) {
       basePrice,
       findMakrup,
       staffMarkupValue || 0,
-      staffMarkupType || 0
+      staffMarkupType || 0,
     );
 
     // Save booking to database
@@ -8256,9 +8406,11 @@ async function modifyPNRV2(req, res) {
       return {
         NameNumber: `${index + 1}.1`,
         GivenName:
-          passenger.passengerCode === "INF" ? "INF" : passenger.givenName,
+          passenger.passengerCode === "INF"
+            ? "INF"
+            : passenger.givenName?.toUpperCase(),
 
-        Surname: passenger.surname,
+        Surname: passenger.surname?.toUpperCase(),
         // NameReference: `${passenger.name.firstName}${[index + 1]}`,
         PassengerType: passenger.passengerCode,
         NameReference:
@@ -8460,8 +8612,8 @@ async function modifyPNRV2(req, res) {
                     getGenderCode(data.passengerCode) === "INF"
                       ? "1.1"
                       : `${index + 1}.1`,
-                  GivenName: data.givenName,
-                  Surname: data.surname,
+                  GivenName: data.givenName?.toUpperCase(),
+                  Surname: data.surname?.toUpperCase(),
                 },
                 VendorPrefs: {
                   Airline: {
@@ -8532,8 +8684,8 @@ async function modifyPNRV2(req, res) {
                 },
                 PersonName: {
                   NameNumber: `${index + 1}.1`,
-                  GivenName: passenger.givenName,
-                  Surname: passenger.surname,
+                  GivenName: passenger.givenName?.toUpperCase(),
+                  Surname: passenger.surname?.toUpperCase(),
                   LapChild:
                     getGenderCode(passenger.passengerCode) === "INF"
                       ? true
@@ -8634,7 +8786,7 @@ async function modifyPNRV2(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(bodys),
-      }
+      },
     );
 
     const sabreResponse = await response.json();
@@ -8655,7 +8807,7 @@ async function modifyPNRV2(req, res) {
         res,
         `Failed to modify booking: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(sabreResponse)}`,
-        response.status
+        response.status,
       );
     }
     // if (
@@ -8753,7 +8905,7 @@ async function modifyPNRV2(req, res) {
       basePrice,
       findMakrup,
       staffMarkupValue || 0,
-      staffMarkupType || 0
+      staffMarkupType || 0,
     );
 
     // Save booking to database
@@ -8941,7 +9093,7 @@ async function ticketStatus(req, res) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(ticket),
-      }
+      },
     );
     console.log(response);
     const data = await response.json();
@@ -9155,7 +9307,7 @@ async function getTicketsByMonth(req, res) {
     const allSegments = bookings
       .map((booking) => {
         const travelerNames = booking.travelers.map(
-          (t) => `${t.name.firstName} ${t.name.lastName}`
+          (t) => `${t.name.firstName} ${t.name.lastName}`,
         );
 
         // Filter relevant segments by departure date
@@ -9168,8 +9320,8 @@ async function getTicketsByMonth(req, res) {
                 to: segment.arrival.iataCode,
                 departureTime: segment.departure.at,
                 arrivalTime: segment.arrival.at,
-              }))
-          )
+              })),
+          ),
         );
 
         if (segments.length === 0) return null;
@@ -9223,7 +9375,7 @@ async function getFareRules(req, res) {
         getFareRules: getFareRulesSoap,
       } = require("./sabreSoapService");
       const built = buildFareRulesFromGroupedItineraryResponse(
-        groupedItineraryResponse
+        groupedItineraryResponse,
       );
       if (built.flightDetails?.length) {
         derivedFlights = built.flightDetails;
@@ -9251,7 +9403,7 @@ async function getFareRules(req, res) {
       return successResponse(
         res,
         "Fare rules retrieved successfully",
-        fareRulesResponse
+        fareRulesResponse,
       );
     }
 
@@ -9279,14 +9431,14 @@ async function getFareRules(req, res) {
     return successResponse(
       res,
       "Fare rules retrieved successfully",
-      fareRulesResponse
+      fareRulesResponse,
     );
   } catch (error) {
     console.error("Error in getFareRules controller:", error);
     return errorResponse(
       res,
       error.message || "Failed to retrieve fare rules",
-      500
+      500,
     );
   }
 }
@@ -9325,14 +9477,14 @@ async function getFareRulesFromRevalidate(req, res) {
     return successResponse(
       res,
       "Fare rules retrieved successfully",
-      fareRulesResponse
+      fareRulesResponse,
     );
   } catch (error) {
     console.error("Error in getFareRulesFromRevalidate controller:", error);
     return errorResponse(
       res,
       error.message || "Failed to retrieve fare rules",
-      500
+      500,
     );
   }
 }
@@ -9375,14 +9527,14 @@ async function getAllBrandsPricing(req, res) {
     return successResponse(
       res,
       "Pricing retrieved successfully",
-      pricingResponse
+      pricingResponse,
     );
   } catch (error) {
     console.error("Error in getAllBrandsPricing controller:", error);
     return errorResponse(
       res,
       error.message || "Failed to retrieve pricing",
-      500
+      500,
     );
   }
 }
@@ -9406,7 +9558,7 @@ async function getFareRulesOTA(req, res) {
       return errorResponse(
         res,
         "fareBasisCode, departureDate, classOfService, and carrierCode are required",
-        400
+        400,
       );
     }
 
@@ -9425,14 +9577,14 @@ async function getFareRulesOTA(req, res) {
     return successResponse(
       res,
       "Fare rules retrieved successfully",
-      fareRulesResponse
+      fareRulesResponse,
     );
   } catch (error) {
     console.error("Error in getFareRulesOTA controller:", error);
     return errorResponse(
       res,
       error.message || "Failed to retrieve fare rules",
-      500
+      500,
     );
   }
 }
