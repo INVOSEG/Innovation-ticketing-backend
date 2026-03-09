@@ -9,9 +9,9 @@ const xml2js = require("xml2js");
  */
 async function createSoapSession() {
   try {
-    const username = process.env.SABRE_CLIENT_ID;
-    const password = process.env.SABRE_CLIENT_SECRET;
-    const organization = process.env.SABRE_PCC;
+    const username = process.env.SABRE_SOAP_CLIENT_ID;
+    const password = process.env.SABRE_SOAP_CLIENT_SECRET;
+    const organization = process.env.SABRE_SOAP_PCC;
 
     const request = `<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
         <SOAP-ENV:Header>
@@ -38,30 +38,30 @@ async function createSoapSession() {
             <SessionCreateRQ returnContextID="true" Version="1.0.0" xmlns="http://www.opentravel.org/OTA/2002/11"/>
         </SOAP-ENV:Body>
     </SOAP-ENV:Envelope>`;
+    const soapUrl =
+      process.env.SABRE_SOAP_URL ||
+      SABRE.SOAP_URL ||
+      "https://webservices.havail.sabre.com";
 
-    const response = await fetch(
-      SABRE.SOAP_URL || "https://webservices.havail.sabre.com",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/xml",
-          SOAPAction: "SessionCreateRQ",
-        },
-        body: request,
-      }
-    );
+    const response = await fetch(soapUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/xml",
+        SOAPAction: "SessionCreateRQ",
+      },
+      body: request,
+    });
 
+    const responseText = await response.text();
     if (!response.ok) {
       throw new Error(
-        `SOAP Session creation failed: ${response.status} ${response.statusText}`
+        `SOAP Session creation failed: ${response.status} ${response.statusText}\n${responseText},:::::::::${request}`,
       );
     }
 
-    const responseText = await response.text();
-
     // Try to extract token using regex as fallback
     const tokenMatch = responseText.match(
-      /<wsse:BinarySecurityToken[^>]*>([^<]+)<\/wsse:BinarySecurityToken>/
+      /<wsse:BinarySecurityToken[^>]*>([^<]+)<\/wsse:BinarySecurityToken>/,
     );
     if (tokenMatch && tokenMatch[1]) {
       return tokenMatch[1].trim();
@@ -85,13 +85,13 @@ async function createSoapSession() {
     // Try different possible paths in the XML structure
     const paths = [
       result?.["soap-env:Envelope"]?.["soap-env:Header"]?.["wsse:Security"]?.[
-        "wsse:BinarySecurityToken"
+      "wsse:BinarySecurityToken"
       ],
       result?.["soap-env:Envelope"]?.["soap-env:Header"]?.["wsse:Security"]?.[
         "wsse:BinarySecurityToken"
       ]?._,
       result?.["soap-env:Envelope"]?.["soap-env:Header"]?.[0]?.[
-        "wsse:Security"
+      "wsse:Security"
       ]?.[0]?.["wsse:BinarySecurityToken"]?.[0],
       result?.["soap-env:Envelope"]?.["soap-env:Header"]?.[0]?.[
         "wsse:Security"
@@ -365,7 +365,7 @@ function normalizeTime(timeStr = "") {
  * @returns {{flightDetails: Array, validatingCarrier: string, paxCounts: {ADT:number,CNN:number,INF:number}}}
  */
 function buildFareRulesFromGroupedItineraryResponse(
-  groupedItineraryResponse = {}
+  groupedItineraryResponse = {},
 ) {
   const itineraryGroups = groupedItineraryResponse?.itineraryGroups || [];
   const firstGroup = itineraryGroups[0] || {};
@@ -404,8 +404,9 @@ function buildFareRulesFromGroupedItineraryResponse(
     fareComponentDescs.set(fc.id, fc);
   });
 
-  // Assign component numbers in the order provided by passengerInfo.fareComponents
-  const componentList = fareComponents.map((fc, idx) => {
+  // Build per-segment fare component data in travel order to keep booking code + basis aligned.
+  const segmentComponentData = [];
+  fareComponents.forEach((fc, idx) => {
     const desc = fareComponentDescs.get(fc.ref) || {};
     const fareBasisCode =
       desc.fareBasisCode || desc.FareBasisCode || fc.fareBasisCode || "";
@@ -413,22 +414,27 @@ function buildFareRulesFromGroupedItineraryResponse(
       fc?.segments?.[0]?.segment?.bookingCode ||
       fc?.segments?.[0]?.segment?.BookingCode ||
       "Y";
-    return {
-      fareBasisCode,
-      bookingCode,
-      componentNumber: idx + 1,
-    };
+    const componentNumber = idx + 1;
+
+    const segmentCount = (fc.segments || []).filter((s) => s.segment).length;
+    for (let i = 0; i < Math.max(segmentCount, 1); i += 1) {
+      segmentComponentData.push({
+        fareBasisCode,
+        bookingCode,
+        componentNumber,
+      });
+    }
   });
 
   // Build segment list from legs/schedules
   const scheduleMap = new Map();
   (groupedItineraryResponse?.scheduleDescs || []).forEach((s) =>
-    scheduleMap.set(s.id, s)
+    scheduleMap.set(s.id, s),
   );
 
   const legMap = new Map();
   (groupedItineraryResponse?.legDescs || []).forEach((l) =>
-    legMap.set(l.id, l)
+    legMap.set(l.id, l),
   );
 
   const legDescriptions =
@@ -456,7 +462,7 @@ function buildFareRulesFromGroupedItineraryResponse(
       if (depTime && arrTime) {
         const dep = new Date(depDateTime.replace("Z", "+00:00"));
         const arrCandidate = new Date(
-          `${depDate}T${arrTime}`.replace("Z", "+00:00")
+          `${depDate}T${arrTime}`.replace("Z", "+00:00"),
         );
         if (
           !isNaN(dep) &&
@@ -469,8 +475,8 @@ function buildFareRulesFromGroupedItineraryResponse(
       const arrDateTime = arrTime ? `${arrDate}T${arrTime}` : "";
 
       const component =
-        componentList[segmentIdx] ||
-        componentList[componentList.length - 1] ||
+        segmentComponentData[segmentIdx] ||
+        segmentComponentData[segmentComponentData.length - 1] ||
         {};
 
       // Carrier fallbacks: prefer marketing, else operating, else validating carrier, else YY (placeholder)
@@ -508,7 +514,12 @@ function buildFareRulesFromGroupedItineraryResponse(
     });
   });
 
-  return { flightDetails: segments, validatingCarrier, paxCounts };
+  return {
+    flightDetails: segments,
+    validatingCarrier,
+    paxCounts,
+    segmentComponentData,
+  };
 }
 
 /**
@@ -559,10 +570,10 @@ function deriveFareComponentNumbers(flights = []) {
     flights.forEach((flight, index) => {
       const departureDate = new Date(
         flight?.DepartureDate ||
-          flight?.departureDate ||
-          flight?.departure?.at ||
-          flight?.Departure?.DateTime ||
-          ""
+        flight?.departureDate ||
+        flight?.departure?.at ||
+        flight?.Departure?.DateTime ||
+        "",
       );
       if (
         lastArrivalDate instanceof Date &&
@@ -580,10 +591,10 @@ function deriveFareComponentNumbers(flights = []) {
 
       const arrivalDate = new Date(
         flight?.ArrivalDate ||
-          flight?.arrivalDate ||
-          flight?.arrival?.at ||
-          flight?.Arrival?.DateTime ||
-          ""
+        flight?.arrivalDate ||
+        flight?.arrival?.at ||
+        flight?.Arrival?.DateTime ||
+        "",
       );
       if (arrivalDate instanceof Date && !isNaN(arrivalDate)) {
         lastArrivalDate = arrivalDate;
@@ -630,13 +641,19 @@ async function getFareRules({
     // Create SOAP session
     const sessionToken = await createSoapSession();
 
+    // Initialize segment component data if available
+    let segmentComponentData = [];
+
     // If a Sabre groupedItineraryResponse is provided, derive flights/fare bases from it.
     if (groupedItineraryResponse) {
       const built = buildFareRulesFromGroupedItineraryResponse(
-        groupedItineraryResponse
+        groupedItineraryResponse,
       );
       if (built.flightDetails?.length) {
         flightDetails = built.flightDetails;
+      }
+      if (built.segmentComponentData) {
+        segmentComponentData = built.segmentComponentData;
       }
       if (!validatingCarrier && built.validatingCarrier) {
         validatingCarrier = built.validatingCarrier;
@@ -666,11 +683,29 @@ async function getFareRules({
     // Filter flight details by fareId if provided
     const filteredFlights = fareId
       ? flightDetails.filter(
-          (flight) => flight.fare_itr === fareId || flight.fareId === fareId
-        )
+        (flight) => flight.fare_itr === fareId || flight.fareId === fareId,
+      )
       : flightDetails;
 
     const derivedComponentNumbers = deriveFareComponentNumbers(filteredFlights);
+
+    // Get validating carrier: prefer explicit param, otherwise marketing carrier from first segment,
+    // then other fallbacks. This avoids picking an operating/validating mismatch that can trigger
+    // "NO FARE FOR CLASS USED" when fares are filed under the marketing carrier.
+    const validatingCarrierCode =
+      validatingCarrier ||
+      filteredFlights[0]?.marketingCarrier ||
+      filteredFlights[0]?.MarketingCarrier ||
+      filteredFlights[0]?.MarketingAirline?.Code ||
+      filteredFlights[0]?.marketingAirline ||
+      filteredFlights[0]?.MarketingAirline ||
+      filteredFlights[0]?.carrierCode ||
+      filteredFlights[0]?.MarketingAirlineCode ||
+      filteredFlights[0]?.ValidatingCarrier ||
+      filteredFlights[0]?.validatingCarrier ||
+      filteredFlights[0]?.operatingCarrier ||
+      filteredFlights[0]?.operating ||
+      "YY";
 
     // Keep fare component numbers consistent: same fare basis + pax type => same number.
     // If a suggested number is already owned by a different fare basis, allocate a new one.
@@ -706,17 +741,22 @@ async function getFareRules({
 
     filteredFlights.forEach((flight, flightIndex) => {
       const usedFareBasisCodes = new Set();
+      const componentData =
+        segmentComponentData[flightIndex] ||
+        segmentComponentData[segmentComponentData.length - 1] ||
+        {};
       const ResBookDesigCode =
         flight.ResBookDesigCode ||
+        componentData.bookingCode ||
         flight.bookingCode ||
         flight.cabinTypeCode ||
         "Y";
       // Use ISO format for SOAP XML (YYYY-MM-DDTHH:mm:ss)
       const DepartureDate = formatISODateTime(
-        flight.DepartureDate || flight.departureDate || flight.departure?.at
+        flight.DepartureDate || flight.departureDate || flight.departure?.at,
       );
       const ArrivalDate = formatISODateTime(
-        flight.ArrivalDate || flight.arrivalDate || flight.arrival?.at
+        flight.ArrivalDate || flight.arrivalDate || flight.arrival?.at,
       );
       // BookingDate should be just date (YYYY-MM-DD) + T00:00:00
       const bookingDateRaw =
@@ -758,7 +798,10 @@ async function getFareRules({
       const SegmentType = flight.SegmentType || flight.segmentType || "A";
       const RealReservationStatus =
         flight.RealReservationStatus || flight.realReservationStatus || "NN";
-      const derivedComponentNumber = derivedComponentNumbers[flightIndex] || 1;
+      const derivedComponentNumber =
+        componentData.componentNumber ||
+        derivedComponentNumbers[flightIndex] ||
+        1;
 
       flightSegmentsXml += `\n    <OriginDestinationOption>`;
       // BookingDate needs to be in format YYYY-MM-DDTHH:mm:ss
@@ -782,21 +825,25 @@ async function getFareRules({
       ) {
         flight.farebase.forEach((fare) => {
           const rawFareBasisCode =
-            fare.FareBasisCode || fare.fareBasisCode || "";
+            fare.FareBasisCode ||
+            fare.fareBasisCode ||
+            componentData.fareBasisCode ||
+            "";
           // Pass ResBookDesigCode to potentially prepend booking class
           const FareBasisCode = sanitizeFareBasisCode(
             rawFareBasisCode,
-            ResBookDesigCode
+            ResBookDesigCode,
           );
           const PassengerType =
             fare.PassengerType || fare.passengerType || "ADT";
           const FareComponentNumber =
             fare.FareComponentNumber ||
             fare.fareComponentNumber ||
+            componentData.componentNumber ||
             resolveFareComponentNumber(
               FareBasisCode,
               PassengerType,
-              derivedComponentNumber
+              derivedComponentNumber,
             );
 
           // Only add if different from last one to avoid duplicates
@@ -807,19 +854,28 @@ async function getFareRules({
             hasPaxTypeInfo = true;
           }
         });
-      } else if (flight.FareBasisCode || flight.fareBasisCode) {
+      } else if (
+        flight.FareBasisCode ||
+        flight.fareBasisCode ||
+        componentData.fareBasisCode
+      ) {
         // Single fare basis code
-        const rawFareBasisCode = flight.FareBasisCode || flight.fareBasisCode;
+        const rawFareBasisCode =
+          flight.FareBasisCode ||
+          flight.fareBasisCode ||
+          componentData.fareBasisCode;
         // Pass ResBookDesigCode to potentially prepend booking class
         const FareBasisCode = sanitizeFareBasisCode(
           rawFareBasisCode,
-          ResBookDesigCode
+          ResBookDesigCode,
         );
-        const FareComponentNumber = resolveFareComponentNumber(
-          FareBasisCode,
-          "ADT",
-          derivedComponentNumber
-        );
+        const FareComponentNumber =
+          componentData.componentNumber ||
+          resolveFareComponentNumber(
+            FareBasisCode,
+            "ADT",
+            derivedComponentNumber,
+          );
         const fareKey = `ADT-${FareBasisCode}-${FareComponentNumber}`;
         if (FareBasisCode && !usedFareBasisCodes.has(fareKey)) {
           flightSegmentsXml += `\n      <PaxTypeInformation FareBasisCode="${FareBasisCode}" FareComponentNumber="${FareComponentNumber}" PassengerType="ADT"/>`;
@@ -836,7 +892,7 @@ async function getFareRules({
           const fc = resolveFareComponentNumber(
             null,
             "ADT",
-            derivedComponentNumber
+            derivedComponentNumber,
           );
           flightSegmentsXml += `\n      <PaxTypeInformation FareComponentNumber="${fc}" PassengerType="ADT"/>`;
         }
@@ -844,7 +900,7 @@ async function getFareRules({
           const fc = resolveFareComponentNumber(
             null,
             "CNN",
-            derivedComponentNumber
+            derivedComponentNumber,
           );
           flightSegmentsXml += `\n      <PaxTypeInformation FareComponentNumber="${fc}" PassengerType="CNN"/>`;
         }
@@ -852,7 +908,7 @@ async function getFareRules({
           const fc = resolveFareComponentNumber(
             null,
             "INF",
-            derivedComponentNumber
+            derivedComponentNumber,
           );
           flightSegmentsXml += `\n      <PaxTypeInformation FareComponentNumber="${fc}" PassengerType="INF"/>`;
         }
@@ -861,7 +917,7 @@ async function getFareRules({
           const fc = resolveFareComponentNumber(
             null,
             "ADT",
-            derivedComponentNumber
+            derivedComponentNumber,
           );
           flightSegmentsXml += `\n      <PaxTypeInformation FareComponentNumber="${fc}" PassengerType="ADT"/>`;
         }
@@ -869,24 +925,6 @@ async function getFareRules({
 
       flightSegmentsXml += `\n    </OriginDestinationOption>`;
     });
-
-    // Get validating carrier: prefer explicit param, otherwise marketing carrier from first segment,
-    // then other fallbacks. This avoids picking an operating/validating mismatch that can trigger
-    // "NO FARE FOR CLASS USED" when fares are filed under the marketing carrier.
-    const validatingCarrierCode =
-      validatingCarrier ||
-      filteredFlights[0]?.marketingCarrier ||
-      filteredFlights[0]?.MarketingCarrier ||
-      filteredFlights[0]?.MarketingAirline?.Code ||
-      filteredFlights[0]?.marketingAirline ||
-      filteredFlights[0]?.MarketingAirline ||
-      filteredFlights[0]?.carrierCode ||
-      filteredFlights[0]?.MarketingAirlineCode ||
-      filteredFlights[0]?.ValidatingCarrier ||
-      filteredFlights[0]?.validatingCarrier ||
-      filteredFlights[0]?.operatingCarrier ||
-      filteredFlights[0]?.operating ||
-      "YY";
 
     // Build optional qualifiers
     let optionalQualifiersXml = "";
@@ -941,11 +979,10 @@ async function getFareRules({
 ${passengerTypesXml}
             </PassengerTypes>
           <ValidatingCarrier Code="${validatingCarrierCode || "YY"}"/>
-            ${
-              optionalQualifiersXml
-                ? `<OptionalQualifiers>${optionalQualifiersXml}\n        </OptionalQualifiers>`
-                : ""
-            }
+            ${optionalQualifiersXml
+        ? `<OptionalQualifiers>${optionalQualifiersXml}\n        </OptionalQualifiers>`
+        : ""
+      }
           </PriceRequestInformation>
           <AirItinerary>
             <OriginDestinationOptions>
@@ -975,7 +1012,7 @@ ${flightSegmentsXml}
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(
-        `Fare rules request failed: ${response.status} ${response.statusText}\n${errorText}`
+        `Fare rules request failed: ${response.status} ${response.statusText}\n${errorText}`,
       );
     }
 
@@ -996,7 +1033,7 @@ ${flightSegmentsXml}
     // Extract the response body (matching PHP behavior) and return along with the built request
     const responseBody =
       result?.["soap-env:Envelope"]?.["soap-env:Body"]?.[
-        "StructureFareRulesRS"
+      "StructureFareRulesRS"
       ] || result;
 
     return {
@@ -1091,12 +1128,12 @@ async function getFareRulesOTA({
     }
     if (options.historicalDate) {
       optionalQualifiersXml += `\n        <HistoricalDate>${formatSabreDate(
-        options.historicalDate
+        options.historicalDate,
       )}</HistoricalDate>`;
     }
     if (options.ticketingDate) {
       optionalQualifiersXml += `\n        <TicketingDate>${formatSabreDateTime(
-        options.ticketingDate
+        options.ticketingDate,
       )}</TicketingDate>`;
     }
     if (options.ruleCategoryNumber) {
@@ -1120,11 +1157,10 @@ async function getFareRulesOTA({
         <DepartureDate>${formattedDate}</DepartureDate>
         <ClassOfService>${classOfService}</ClassOfService>
         <CarrierCode>${carrierCode}</CarrierCode>
-        ${
-          optionalQualifiersXml
-            ? `<OptionalQualifiers>${optionalQualifiersXml}\n        </OptionalQualifiers>`
-            : ""
-        }
+        ${optionalQualifiersXml
+        ? `<OptionalQualifiers>${optionalQualifiersXml}\n        </OptionalQualifiers>`
+        : ""
+      }
       </RuleReqInfo>
     </OTA_AirRulesRQ>`;
 
@@ -1167,7 +1203,7 @@ async function getFareRulesOTA({
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(
-        `Fare rules request failed: ${response.status} ${response.statusText}\n${errorText}`
+        `Fare rules request failed: ${response.status} ${response.statusText}\n${errorText}`,
       );
     }
 
@@ -1235,10 +1271,10 @@ async function getAllBrandsPricing({
         flight.cabinTypeCode ||
         "Y";
       const DepartureDate = formatISODateTime(
-        flight.DepartureDate || flight.departureDate || flight.departure?.at
+        flight.DepartureDate || flight.departureDate || flight.departure?.at,
       );
       const ArrivalDate = formatISODateTime(
-        flight.ArrivalDate || flight.arrivalDate || flight.arrival?.at
+        flight.ArrivalDate || flight.arrivalDate || flight.arrival?.at,
       );
       const FlightNumber =
         flight.FlightNumber || flight.flightNumber || flight.number || "";
@@ -1323,7 +1359,7 @@ ${flightSegmentsXml}
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(
-        `Pricing request failed: ${response.status} ${response.statusText}\n${errorText}`
+        `Pricing request failed: ${response.status} ${response.statusText}\n${errorText}`,
       );
     }
 
@@ -1343,7 +1379,7 @@ ${flightSegmentsXml}
 
     return (
       result?.["soap-env:Envelope"]?.["soap-env:Body"]?.[
-        "AllBrandsPricingRS"
+      "AllBrandsPricingRS"
       ] || result
     );
   } catch (error) {
