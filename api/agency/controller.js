@@ -379,7 +379,8 @@ exports.getAllAgencies = async (req, res) => {
       agencies = await Agency.find(filter)
         // .skip((page - 1) * limit)
         // .limit(Number(limit))
-        .populate("type", "type");
+        .populate("type", "type")
+        .sort({ createdAt: -1 });
       const totalAgencies = await Agency.countDocuments(filter);
       const totalPages = Math.ceil(totalAgencies / limit);
 
@@ -395,6 +396,7 @@ exports.getAllAgencies = async (req, res) => {
       });
     } else if (user.role) {
       agencies = await Agency.find({})
+        .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(Number(limit));
 
