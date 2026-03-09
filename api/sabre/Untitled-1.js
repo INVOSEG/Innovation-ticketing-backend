@@ -1518,7 +1518,7 @@ async function postSabreFlightData(req, res) {
           : [],
         TPA_Extensions: {
           PreferNDCSourceOnTie: { Value: true },
-          DataSources: { NDC: "Disable", ATPCO: "Enable", LCC: "Enable" },
+          DataSources: { NDC: "Enable", ATPCO: "Enable", LCC: "Enable" },
         },
         Baggage: { CarryOnInfo: true },
         ETicketDesired: true,
@@ -1896,8 +1896,8 @@ async function postSabreFlightData(req, res) {
       });
       const returnFlightDetails = returnLeg
         ? returnLeg.schedules.map((schedule) => {
-            return scheduleDescs.find((desc) => desc.id === schedule.ref);
-          })
+          return scheduleDescs.find((desc) => desc.id === schedule.ref);
+        })
         : null;
       let marketingCarrier;
       let first = false;
@@ -1917,92 +1917,92 @@ async function postSabreFlightData(req, res) {
       let carrierCode;
       let previousArrivalTime = null;
       // Usage in your mapping
-     // Step 1: fix the segment dates
-const fixedSegments = fixSegmentDatesArray(
-  departureFlightDetails.map((detail) => ({
-    ...detail,
-    departureTime: detail.departure.time,
-    arrivalTime: detail.arrival.time,
-  })),
-  start_date
-);
+      // Step 1: fix the segment dates
+      const fixedSegments = fixSegmentDatesArray(
+        departureFlightDetails.map((detail) => ({
+          ...detail,
+          departureTime: detail.departure.time,
+          arrivalTime: detail.arrival.time,
+        })),
+        start_date
+      );
 
-const departure = fixedSegments.map((seg, index, arr) => {
-  const carrierCode = seg.marketing;
-  let layoverTime = null;
+      const departure = fixedSegments.map((seg, index, arr) => {
+        const carrierCode = seg.marketing;
+        let layoverTime = null;
 
-  if (index > 0) {
-    layoverTime = calculateLayoverTime(
-      new Date(arr[index - 1].fixedArrivalTime),
-      new Date(seg.fixedDepartureTime)
-    );
-  }
+        if (index > 0) {
+          layoverTime = calculateLayoverTime(
+            new Date(arr[index - 1].fixedArrivalTime),
+            new Date(seg.fixedDepartureTime)
+          );
+        }
 
-  return {
-    marketingCarrier: carrierCode,
-    departureTime: seg.fixedDepartureTime,
-    arrivalTime: seg.fixedArrivalTime,
-    arrial: seg.arrial,
-    departureLocation: seg.departure.airport,
-    arrivalLocation: seg.arrival.airport,
-    marketingFlightNumber: seg.carrier.marketingFlightNumber,
-    marketing: seg.marketing,
-    elapsedTime: convertMinutesToISODuration(seg.elapsedTime),
-    stopCount: seg.stopCount,
-    logo: airlineLogoMap[seg.marketing],
-    layoverTime,
-    terminal: seg.arrival.terminal,
-  };
-});
+        return {
+          marketingCarrier: carrierCode,
+          departureTime: seg.fixedDepartureTime,
+          arrivalTime: seg.fixedArrivalTime,
+          arrial: seg.arrial,
+          departureLocation: seg.departure.airport,
+          arrivalLocation: seg.arrival.airport,
+          marketingFlightNumber: seg.carrier.marketingFlightNumber,
+          marketing: seg.marketing,
+          elapsedTime: convertMinutesToISODuration(seg.elapsedTime),
+          stopCount: seg.stopCount,
+          logo: airlineLogoMap[seg.marketing],
+          layoverTime,
+          terminal: seg.arrival.terminal,
+        };
+      });
 
 
       const returnFlight = returnFlightDetails
         ? returnFlightDetails.map((detail, index, array) => {
-            const departureTime = convertToISODateTimeWithRollOverf(
-              detail.departure.time,
-              end_date
-            );
-            const arrivalTime = convertToISODateTimeWithRollOverf(
-              detail.arrival.time,
-              end_date
-            );
+          const departureTime = convertToISODateTimeWithRollOverf(
+            detail.departure.time,
+            end_date
+          );
+          const arrivalTime = convertToISODateTimeWithRollOverf(
+            detail.arrival.time,
+            end_date
+          );
 
-            let layoverTime = null;
-            if (index > 0) {
-              const prevArrivalTime = convertToISODateTime(
-                array[index - 1].arrival.time,
-                end_date
-              );
-              layoverTime = calculateLayoverTime(
-                prevArrivalTime,
-                departureTime
-              );
-            }
-            let arrial = buildDateTime(
+          let layoverTime = null;
+          if (index > 0) {
+            const prevArrivalTime = convertToISODateTime(
+              array[index - 1].arrival.time,
+              end_date
+            );
+            layoverTime = calculateLayoverTime(
+              prevArrivalTime,
+              departureTime
+            );
+          }
+          let arrial = buildDateTime(
+            start_date,
+            detail.departure.time,
+            detail.arrival.time
+          );
+
+          return {
+            departureTime,
+            arrivalTime: arrial.arrival,
+            arrivalDate: buildDateTime(
               start_date,
               detail.departure.time,
               detail.arrival.time
-            );
-
-            return {
-              departureTime,
-              arrivalTime: arrial.arrival,
-              arrivalDate: buildDateTime(
-                start_date,
-                detail.departure.time,
-                detail.arrival.time
-              ),
-              departureLocation: detail.departure.airport,
-              arrivalLocation: detail.arrival.airport,
-              marketingFlightNumber: detail.carrier.marketingFlightNumber,
-              marketing: detail.carrier.marketing,
-              elapsedTime: convertMinutesToISODuration(detail.elapsedTime),
-              stopCount: detail.stopCount,
-              logo: airlineLogoMap[detail.carrier.marketing],
-              layoverTime: layoverTime ? layoverTime : null,
-              terminal: detail.arrival.terminal,
-            };
-          })
+            ),
+            departureLocation: detail.departure.airport,
+            arrivalLocation: detail.arrival.airport,
+            marketingFlightNumber: detail.carrier.marketingFlightNumber,
+            marketing: detail.carrier.marketing,
+            elapsedTime: convertMinutesToISODuration(detail.elapsedTime),
+            stopCount: detail.stopCount,
+            logo: airlineLogoMap[detail.carrier.marketing],
+            layoverTime: layoverTime ? layoverTime : null,
+            terminal: detail.arrival.terminal,
+          };
+        })
         : null;
       const adjustedPrice = calculateAdjustedPrice(
         pricingInfo.totalFare.totalPrice,
@@ -2404,9 +2404,9 @@ async function postSabreFlightDataM(req, res) {
       let adultCabin = [];
       let adultBaggage = adults?.passengerInfo
         ? getBaggageInfo(
-            adults?.passengerInfo?.baggageInformation,
-            baggageAllowanceDesc
-          )
+          adults?.passengerInfo?.baggageInformation,
+          baggageAllowanceDesc
+        )
         : null;
 
       // Check if passenger information has refundable status
@@ -3265,8 +3265,8 @@ async function revalidateItinerary(req, res) {
       });
       const returnFlightDetails = returnLeg
         ? returnLeg.schedules.map((schedule) => {
-            return scheduleDescs.find((desc) => desc.id === schedule.ref);
-          })
+          return scheduleDescs.find((desc) => desc.id === schedule.ref);
+        })
         : null;
       let marketingCarrier;
 
@@ -3328,48 +3328,48 @@ async function revalidateItinerary(req, res) {
 
       const returnFlight = returnFlightDetails
         ? returnFlightDetails.map((detail, index) => {
-            carrierCode = detail.carrier.marketing; // Correctly declare carrierCode
-            const departureTime = convertToISODateTimeWithRollOver(
+          carrierCode = detail.carrier.marketing; // Correctly declare carrierCode
+          const departureTime = convertToISODateTimeWithRollOver(
+            detail.departure.time,
+            groupDescription[1].departureDate,
+            previousArrivalTime
+          );
+
+          const arrivalTime = convertToISODateTimeWithRollOver(
+            detail.arrival.time,
+            groupDescription[1].departureDate,
+            new Date(departureTime)
+          );
+
+          let layoverTime = null;
+          if (index > 0) {
+            layoverTime = calculateLayoverTime(
+              previousArrivalTime,
+              departureTime
+            );
+          }
+
+          previousArrivalTime = new Date(arrivalTime); // Store for next iteration
+          return {
+            departureTime: convertToISODateTimeWithRollOverf(
               detail.departure.time,
-              groupDescription[1].departureDate,
-              previousArrivalTime
-            );
-
-            const arrivalTime = convertToISODateTimeWithRollOver(
+              groupDescription[1].departureDate
+            ),
+            arrivalTime: convertToISODateTimeWithRollOverf(
               detail.arrival.time,
-              groupDescription[1].departureDate,
-              new Date(departureTime)
-            );
-
-            let layoverTime = null;
-            if (index > 0) {
-              layoverTime = calculateLayoverTime(
-                previousArrivalTime,
-                departureTime
-              );
-            }
-
-            previousArrivalTime = new Date(arrivalTime); // Store for next iteration
-            return {
-              departureTime: convertToISODateTimeWithRollOverf(
-                detail.departure.time,
-                groupDescription[1].departureDate
-              ),
-              arrivalTime: convertToISODateTimeWithRollOverf(
-                detail.arrival.time,
-                groupDescription[1].departureDate
-              ),
-              marketingCarrier: detail.carrier.marketing,
-              departureLocation: detail.departure.airport,
-              arrivalLocation: detail.arrival.airport,
-              marketingFlightNumber: detail.carrier.marketingFlightNumber,
-              marketing: detail.carrier.marketing,
-              elapsedTime: convertMinutesToISODuration(detail.elapsedTime),
-              stopCount: detail.stopCount,
-              layoverTime,
-              logo: airlineLogoMap[detail.carrier.marketing],
-            };
-          })
+              groupDescription[1].departureDate
+            ),
+            marketingCarrier: detail.carrier.marketing,
+            departureLocation: detail.departure.airport,
+            arrivalLocation: detail.arrival.airport,
+            marketingFlightNumber: detail.carrier.marketingFlightNumber,
+            marketing: detail.carrier.marketing,
+            elapsedTime: convertMinutesToISODuration(detail.elapsedTime),
+            stopCount: detail.stopCount,
+            layoverTime,
+            logo: airlineLogoMap[detail.carrier.marketing],
+          };
+        })
         : null;
 
       const adjustedPrice = calculateAdjustedPrice(
@@ -3680,8 +3680,8 @@ async function createBooking(req, res) {
           getGenderCode(passenger.travelerType) === "CNN"
             ? `C${calculateAgeInYears(passenger.dateOfBirth)}`
             : getGenderCode(passenger.travelerType) === "INF"
-            ? `I${calculateAgeInMonths(passenger.dateOfBirth)}`
-            : `A${calculateAgeInYears(passenger.dateOfBirth)}`,
+              ? `I${calculateAgeInMonths(passenger.dateOfBirth)}`
+              : `A${calculateAgeInYears(passenger.dateOfBirth)}`,
 
         // Gender: passenger.gender || "M",
         Infant: getGenderCode(passenger.travelerType) === "INF" ? true : false,
@@ -3723,23 +3723,23 @@ async function createBooking(req, res) {
 
             ...(infant_firstName
               ? [
-                  {
-                    SSR_Code: "INFT",
-                    Text: `${infant_lastname}/${infant_firstName}/${infant_DOB}`,
-                    PersonName: {
-                      NameNumber: "1.1",
-                    },
+                {
+                  SSR_Code: "INFT",
+                  Text: `${infant_lastname}/${infant_firstName}/${infant_DOB}`,
+                  PersonName: {
+                    NameNumber: "1.1",
                   },
-                ]
+                },
+              ]
               : []),
             ...(child_DOB
               ? [
-                  {
-                    SSR_Code: "CHLD",
-                    Text: `${child_DOB}`,
-                    PersonName: { NameNumber: child_index },
-                  },
-                ]
+                {
+                  SSR_Code: "CHLD",
+                  Text: `${child_DOB}`,
+                  PersonName: { NameNumber: child_index },
+                },
+              ]
               : []),
             // {
             //   SSR_Code: "OTHS",
@@ -3926,7 +3926,7 @@ async function createBooking(req, res) {
     if (
       !response.ok ||
       bookingData.CreatePassengerNameRecordRS.ApplicationResults.status !==
-        "Complete"
+      "Complete"
     ) {
       return errorResponse(res, bookingData, 404);
       return errorResponse(res, bookingRequest, 404);
@@ -4311,8 +4311,8 @@ async function createBookingg(Nada, user, res) {
           getGenderCode(passenger.travelerType) === "CNN"
             ? `C${calculateAgeInYears(passenger.dateOfBirth)}`
             : getGenderCode(passenger.travelerType) === "INF"
-            ? `I${calculateAgeInMonths(passenger.dateOfBirth)}`
-            : `A${calculateAgeInYears(passenger.dateOfBirth)}`,
+              ? `I${calculateAgeInMonths(passenger.dateOfBirth)}`
+              : `A${calculateAgeInYears(passenger.dateOfBirth)}`,
 
         // Gender: passenger.gender || "M",
         Infant: getGenderCode(passenger.travelerType) === "INF" ? true : false,
@@ -4354,23 +4354,23 @@ async function createBookingg(Nada, user, res) {
 
             ...(infant_firstName
               ? [
-                  {
-                    SSR_Code: "INFT",
-                    Text: `${infant_lastname}/${infant_firstName}/${infant_DOB}`,
-                    PersonName: {
-                      NameNumber: "1.1",
-                    },
+                {
+                  SSR_Code: "INFT",
+                  Text: `${infant_lastname}/${infant_firstName}/${infant_DOB}`,
+                  PersonName: {
+                    NameNumber: "1.1",
                   },
-                ]
+                },
+              ]
               : []),
             ...(child_DOB
               ? [
-                  {
-                    SSR_Code: "CHLD",
-                    Text: `${child_DOB}`,
-                    PersonName: { NameNumber: child_index },
-                  },
-                ]
+                {
+                  SSR_Code: "CHLD",
+                  Text: `${child_DOB}`,
+                  PersonName: { NameNumber: child_index },
+                },
+              ]
               : []),
             // {
             //   SSR_Code: "OTHS",
@@ -4550,7 +4550,7 @@ async function createBookingg(Nada, user, res) {
     if (
       !response.ok ||
       bookingData.CreatePassengerNameRecordRS.ApplicationResults.status !==
-        "Complete"
+      "Complete"
     ) {
       return { status: 500, data: bookingData };
     }
@@ -4857,8 +4857,8 @@ async function createBookingM(req, res) {
           typeCode === "CNN"
             ? `C${calculateAgeInYears(pax.dateOfBirth)}`
             : typeCode === "INF"
-            ? `I${calculateAgeInMonths(pax.dateOfBirth)}`
-            : `A${calculateAgeInYears(pax.dateOfBirth)}`,
+              ? `I${calculateAgeInMonths(pax.dateOfBirth)}`
+              : `A${calculateAgeInYears(pax.dateOfBirth)}`,
         Infant: typeCode === "INF",
       };
     });
@@ -4892,21 +4892,21 @@ async function createBookingM(req, res) {
           Service: [
             ...(infantFN
               ? [
-                  {
-                    SSR_Code: "INFT",
-                    Text: `${infantLN}/${infantFN}/${infantDOB}`,
-                    PersonName: { NameNumber: "1.1" },
-                  },
-                ]
+                {
+                  SSR_Code: "INFT",
+                  Text: `${infantLN}/${infantFN}/${infantDOB}`,
+                  PersonName: { NameNumber: "1.1" },
+                },
+              ]
               : []),
             ...(childDOB
               ? [
-                  {
-                    SSR_Code: "CHLD",
-                    Text: childDOB,
-                    PersonName: { NameNumber: childIndex },
-                  },
-                ]
+                {
+                  SSR_Code: "CHLD",
+                  Text: childDOB,
+                  PersonName: { NameNumber: childIndex },
+                },
+              ]
               : []),
             {
               SSR_Code: "CTCM",
@@ -5035,7 +5035,7 @@ async function createBookingM(req, res) {
     if (
       !response.ok ||
       bookingData.CreatePassengerNameRecordRS.ApplicationResults.status !==
-        "Complete"
+      "Complete"
     ) {
       return errorResponse(res, bookingData, 404);
       return errorResponse(res, bookingRequest, 404);
@@ -5114,8 +5114,7 @@ async function createBookingM(req, res) {
 
         sameNameTravellers.forEach((t, i) => {
           console.log(
-            `  [${i + 1}] Code: ${t.code}, CNIC: ${t.cnic}, Passport: ${
-              t.passportNumber
+            `  [${i + 1}] Code: ${t.code}, CNIC: ${t.cnic}, Passport: ${t.passportNumber
             }`
           );
         });
@@ -5411,8 +5410,8 @@ async function createBookingMM(req, res) {
           getGenderCode(passenger.travelerType) === "CNN"
             ? `C${calculateAgeInYears(passenger.dateOfBirth)}`
             : getGenderCode(passenger.travelerType) === "INF"
-            ? `I${calculateAgeInMonths(passenger.dateOfBirth)}`
-            : `A${calculateAgeInYears(passenger.dateOfBirth)}`,
+              ? `I${calculateAgeInMonths(passenger.dateOfBirth)}`
+              : `A${calculateAgeInYears(passenger.dateOfBirth)}`,
         Infant: getGenderCode(passenger.travelerType) === "INF",
       };
     });
@@ -5444,21 +5443,21 @@ async function createBookingMM(req, res) {
           Service: [
             ...(infant_firstName
               ? [
-                  {
-                    SSR_Code: "INFT",
-                    Text: `${infant_lastname}/${infant_firstName}/${infant_DOB}`,
-                    PersonName: { NameNumber: "1.1" },
-                  },
-                ]
+                {
+                  SSR_Code: "INFT",
+                  Text: `${infant_lastname}/${infant_firstName}/${infant_DOB}`,
+                  PersonName: { NameNumber: "1.1" },
+                },
+              ]
               : []),
             ...(child_DOB
               ? [
-                  {
-                    SSR_Code: "CHLD",
-                    Text: `${child_DOB}`,
-                    PersonName: { NameNumber: child_index },
-                  },
-                ]
+                {
+                  SSR_Code: "CHLD",
+                  Text: `${child_DOB}`,
+                  PersonName: { NameNumber: child_index },
+                },
+              ]
               : []),
             {
               SSR_Code: "CTCM",
@@ -5584,7 +5583,7 @@ async function createBookingMM(req, res) {
     if (
       !response.ok ||
       bookingData.CreatePassengerNameRecordRS?.ApplicationResults?.status !==
-        "Complete"
+      "Complete"
     ) {
       console.error(";logd Booking failed", bookingData);
       return res.status(500).json({ error: bookingData });
@@ -5665,8 +5664,7 @@ async function createBookingMM(req, res) {
 
         sameNameTravellers.forEach((t, i) => {
           console.log(
-            `  [${i + 1}] Code: ${t.code}, CNIC: ${t.cnic}, Passport: ${
-              t.passportNumber
+            `  [${i + 1}] Code: ${t.code}, CNIC: ${t.cnic}, Passport: ${t.passportNumber
             }`
           );
         });
@@ -6255,9 +6253,8 @@ async function issueTicketOffline(req, res) {
       const itineraries = Object.values(groupedFlights).map((flightGroup) => ({
         duration: `${Math.floor(
           flightGroup.reduce((acc, f) => acc + f.durationInMinutes, 0) / 60
-        )}H${
-          flightGroup.reduce((acc, f) => acc + f.durationInMinutes, 0) % 60
-        }M`,
+        )}H${flightGroup.reduce((acc, f) => acc + f.durationInMinutes, 0) % 60
+          }M`,
         segments: flightGroup.map((flight) => ({
           departure: {
             iataCode: flight?.fromAirportCode,
@@ -6274,9 +6271,8 @@ async function issueTicketOffline(req, res) {
           aircraft: {
             code: flight?.aircraftTypeCode,
           },
-          duration: `${Math.floor(flight?.durationInMinutes / 60)}H${
-            flight?.durationInMinutes % 60
-          }M`,
+          duration: `${Math.floor(flight?.durationInMinutes / 60)}H${flight?.durationInMinutes % 60
+            }M`,
           bookingStatus: flight?.flightStatusName,
           segmentType: "FLIGHT",
           isFlown: false,
@@ -6887,7 +6883,7 @@ async function finalizeBooking(req, res) {
     });
 
     const bookingData = await amadeusResponse.json();
-  } catch (error) {}
+  } catch (error) { }
 }
 
 async function deleteBooking(req, res) {
@@ -7144,8 +7140,7 @@ async function refundFlightTickets(req, res) {
     if (!response.ok) {
       return errorResponse(
         res,
-        `Failed to void PNR: ${response.status} ${
-          response.statusText
+        `Failed to void PNR: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(amadeusResponse)}`,
         response.status
       );
@@ -7212,8 +7207,7 @@ async function voidFlightTickets(req, res) {
     if (!response.ok) {
       return errorResponse(
         res,
-        `Failed to void PNR: ${response.status} ${
-          response.statusText
+        `Failed to void PNR: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(sabreResponse)}`,
         response.status
       );
@@ -7292,8 +7286,7 @@ async function checkFlightTickets(req, res) {
     if (!response.ok) {
       return errorResponse(
         res,
-        `Failed to void PNR: ${response.status} ${
-          response.statusText
+        `Failed to void PNR: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(amadeusResponse)}`,
         response.status
       );
@@ -7456,8 +7449,7 @@ async function updatePNR(req, res) {
       // Generic API error
       return errorResponse(
         res,
-        `Failed to get Booking: ${response.status} ${
-          response.statusText
+        `Failed to get Booking: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(amadeusResponse)}`,
         response.status
       );
@@ -7876,31 +7868,31 @@ async function modifyPNR(req, res) {
         },
         travelers: Array.isArray(travelers)
           ? travelers.map((data, index) => ({
-              givenName: data.givenName,
-              surname: data.surname,
-              type: data.type,
-              passengerCode: data.passengerCode,
-              birthDate: documentDetails?.[index]?.dateOfBirth || null,
-              identityDocuments: documentDetails?.[index]
-                ? [
-                    {
-                      residenceCountryCode:
-                        documentDetails[index]?.validityCountry || "",
-                      gender: documentDetails[index]?.gender || "",
-                      issuingCountryCode:
-                        documentDetails[index]?.issuanceCountry || "",
-                      documentType: documentDetails[index]?.documentType || "",
-                      documentNumber: documentDetails[index]?.number || "",
-                      expiryDate: documentDetails[index]?.expiryDate || "",
-                      isPrimaryDocumentHolder:
-                        documentDetails[index]?.holder || false,
-                      givenName: data.givenName,
-                      surname: data.surname,
-                      birthDate: documentDetails[index]?.dateOfBirth || "",
-                    },
-                  ]
-                : [],
-            }))
+            givenName: data.givenName,
+            surname: data.surname,
+            type: data.type,
+            passengerCode: data.passengerCode,
+            birthDate: documentDetails?.[index]?.dateOfBirth || null,
+            identityDocuments: documentDetails?.[index]
+              ? [
+                {
+                  residenceCountryCode:
+                    documentDetails[index]?.validityCountry || "",
+                  gender: documentDetails[index]?.gender || "",
+                  issuingCountryCode:
+                    documentDetails[index]?.issuanceCountry || "",
+                  documentType: documentDetails[index]?.documentType || "",
+                  documentNumber: documentDetails[index]?.number || "",
+                  expiryDate: documentDetails[index]?.expiryDate || "",
+                  isPrimaryDocumentHolder:
+                    documentDetails[index]?.holder || false,
+                  givenName: data.givenName,
+                  surname: data.surname,
+                  birthDate: documentDetails[index]?.dateOfBirth || "",
+                },
+              ]
+              : [],
+          }))
           : [],
       },
       retrieveBooking: true,
@@ -7939,8 +7931,7 @@ async function modifyPNR(req, res) {
     if (!response.ok) {
       return errorResponse(
         res,
-        `Failed to modify booking: ${response.status} ${
-          response.statusText
+        `Failed to modify booking: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(sabreResponse)}`,
         response.status
       );
@@ -7976,26 +7967,26 @@ async function modifyPNR(req, res) {
 
     const traveler = Array.isArray(sabreResponse.travelers)
       ? sabreResponse.travelers.map((traveler, index) => ({
-          id: `${index + 1}`,
-          dateOfBirth: traveler.identityDocuments[0].birthDate,
-          gender: traveler.identityDocuments[0].gender,
-          name: {
-            firstName: traveler.givenName,
-            lastName: traveler.surname,
-          },
-          documents: Array.isArray(traveler.identityDocuments)
-            ? traveler.identityDocuments.map((doc) => ({
-                number: doc.documentNumber,
-                issuanceCountry: doc.issuingCountryCode,
-                nationality: doc.residenceCountryCode,
-                expiryDate: doc.expiryDate,
-                // issuanceDate: doc.issuanceDate,
-                // birthPlace: doc.birthPlace,
-                documentType: doc.documentType,
-                holder: doc.isPrimaryDocumentHolder,
-              }))
-            : [],
-        }))
+        id: `${index + 1}`,
+        dateOfBirth: traveler.identityDocuments[0].birthDate,
+        gender: traveler.identityDocuments[0].gender,
+        name: {
+          firstName: traveler.givenName,
+          lastName: traveler.surname,
+        },
+        documents: Array.isArray(traveler.identityDocuments)
+          ? traveler.identityDocuments.map((doc) => ({
+            number: doc.documentNumber,
+            issuanceCountry: doc.issuingCountryCode,
+            nationality: doc.residenceCountryCode,
+            expiryDate: doc.expiryDate,
+            // issuanceDate: doc.issuanceDate,
+            // birthPlace: doc.birthPlace,
+            documentType: doc.documentType,
+            holder: doc.isPrimaryDocumentHolder,
+          }))
+          : [],
+      }))
       : [];
 
     if (Array.isArray(sabreResponse.flights)) {
@@ -8023,11 +8014,11 @@ async function modifyPNR(req, res) {
 
     const price = Array.isArray(sabreResponse.payments?.flightTotals)
       ? sabreResponse.payments.flightTotals.map((price) => ({
-          currency: price.currencyCode,
-          total: price.total,
-          base: price.subtotal,
-          grandTotal: price.total,
-        }))
+        currency: price.currencyCode,
+        total: price.total,
+        base: price.subtotal,
+        grandTotal: price.total,
+      }))
       : [];
 
     let basePrice = parseFloat(sabreResponse?.fares?.[0]?.totals?.total || 0);
@@ -8254,8 +8245,8 @@ async function modifyPNRV2(req, res) {
           passenger.passengerCode === "CNN"
             ? `C${calculateAgeInYears(documentDetails[index].dateOfBirth)}`
             : passenger.passengerCode === "INF"
-            ? `I${calculateAgeInMonths(documentDetails[index].dateOfBirth)}`
-            : `A${calculateAgeInYears(documentDetails[index].dateOfBirth)}`,
+              ? `I${calculateAgeInMonths(documentDetails[index].dateOfBirth)}`
+              : `A${calculateAgeInYears(documentDetails[index].dateOfBirth)}`,
 
         // Gender: passenger.gender || "M",
         Infant: passenger.type === "INFANT" ? true : false,
@@ -8443,8 +8434,8 @@ async function modifyPNRV2(req, res) {
                     getGenderCode(data.passengerCode) === "INF"
                       ? "FI"
                       : documentDetails?.[index]?.gender
-                          ?.charAt(0)
-                          ?.toUpperCase(),
+                        ?.charAt(0)
+                        ?.toUpperCase(),
                   NameNumber:
                     getGenderCode(data.passengerCode) === "INF"
                       ? "1.1"
@@ -8530,8 +8521,8 @@ async function modifyPNRV2(req, res) {
                   Gender:
                     getGenderCode(passenger.passengerCode) === "INF"
                       ? `${documentDetails[index].gender
-                          ?.charAt(0)
-                          ?.toUpperCase()}I`
+                        ?.charAt(0)
+                        ?.toUpperCase()}I`
                       : documentDetails[index].gender?.charAt(0)?.toUpperCase(),
                   DateOfBirth: documentDetails[index].dateOfBirth,
                 },
@@ -8642,8 +8633,7 @@ async function modifyPNRV2(req, res) {
     if (!response.ok) {
       return errorResponse(
         res,
-        `Failed to modify booking: ${response.status} ${
-          response.statusText
+        `Failed to modify booking: ${response.status} ${response.statusText
         }. Details: ${JSON.stringify(sabreResponse)}`,
         response.status
       );
@@ -8684,26 +8674,26 @@ async function modifyPNRV2(req, res) {
 
     const traveler = Array.isArray(sabreResponse.travelers)
       ? sabreResponse.travelers.map((traveler, index) => ({
-          id: `${index + 1}`,
-          dateOfBirth: traveler.identityDocuments[0].birthDate,
-          gender: traveler.identityDocuments[0].gender,
-          name: {
-            firstName: traveler.givenName,
-            lastName: traveler.surname,
-          },
-          documents: Array.isArray(traveler.identityDocuments)
-            ? traveler.identityDocuments.map((doc) => ({
-                number: doc.documentNumber,
-                issuanceCountry: doc.issuingCountryCode,
-                nationality: doc.residenceCountryCode,
-                expiryDate: doc.expiryDate,
-                // issuanceDate: doc.issuanceDate,
-                // birthPlace: doc.birthPlace,
-                documentType: doc.documentType,
-                holder: doc.isPrimaryDocumentHolder,
-              }))
-            : [],
-        }))
+        id: `${index + 1}`,
+        dateOfBirth: traveler.identityDocuments[0].birthDate,
+        gender: traveler.identityDocuments[0].gender,
+        name: {
+          firstName: traveler.givenName,
+          lastName: traveler.surname,
+        },
+        documents: Array.isArray(traveler.identityDocuments)
+          ? traveler.identityDocuments.map((doc) => ({
+            number: doc.documentNumber,
+            issuanceCountry: doc.issuingCountryCode,
+            nationality: doc.residenceCountryCode,
+            expiryDate: doc.expiryDate,
+            // issuanceDate: doc.issuanceDate,
+            // birthPlace: doc.birthPlace,
+            documentType: doc.documentType,
+            holder: doc.isPrimaryDocumentHolder,
+          }))
+          : [],
+      }))
       : [];
 
     if (Array.isArray(sabreResponse.flights)) {
@@ -8731,11 +8721,11 @@ async function modifyPNRV2(req, res) {
 
     const price = Array.isArray(sabreResponse.payments?.flightTotals)
       ? sabreResponse.payments.flightTotals.map((price) => ({
-          currency: price.currencyCode,
-          total: price.total,
-          base: price.subtotal,
-          grandTotal: price.total,
-        }))
+        currency: price.currencyCode,
+        total: price.total,
+        base: price.subtotal,
+        grandTotal: price.total,
+      }))
       : [];
 
     let basePrice = parseFloat(sabreResponse?.fares?.[0]?.totals?.total || 0);

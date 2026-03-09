@@ -24,6 +24,7 @@ module.exports = (app) => {
   app.use("/api/flights", require("./api/amadeus"));
   app.use("/api/type", require("./api/type"));
   app.use("/api/sabre", require("./api/sabre"));
+  app.use("/api/hitit", require("./api/hitit"));
   app.use("/api/permission", require("./api/permission"));
   app.use("/api/markup", require("./api/markup"));
   app.use("/api/airlineMarkup", require("./api/airlineMarkup"));
