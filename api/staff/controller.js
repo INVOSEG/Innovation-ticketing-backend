@@ -402,10 +402,8 @@ exports.getAllStaff = async (req, res) => {
     const findAllStaff = await STAFF.find({
       ...filter,
       agencyId: id,
-      role: { $nin: [EUserRole.AGENCY, EUserRole.SUPERADMIN] }, // Exclude 'agency' and 'super admin' roles
-
-      // role: { $in: ["staff", "marketing", "sale"] },
-    }).populate("agencyId"); // Populate the agencyId field
+      role: { $nin: [EUserRole.AGENCY, EUserRole.SUPERADMIN] },
+    }).populate("agencyId").sort({ createdAt: -1 });
 
     // .skip((page - 1) * limit)
     // .limit(Number(limit));
@@ -444,7 +442,7 @@ exports.getAllSPOStaff = async (req, res) => {
     const findAllStaff = await STAFF.find({
       agencyId: id,
       role: "SPO",
-    });
+    }).sort({ createdAt: -1 });
 
     successResponse(res, "Staff fetched successfully", findAllStaff);
   } catch (err) {
@@ -467,6 +465,7 @@ exports.getAllStaffAdmin = async (req, res) => {
       role: { $in: ["staff", "marketing", "sale"] },
     })
       .populate("agencyId", "agencyName")
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(Number(limit));
     console.log(findAllStaff);
